@@ -1,0 +1,30 @@
+{
+    "targetEntityType": "tag",
+    "title": "Tags",
+    "columns": [
+        {
+            "name": "labelField",
+            "displayName": "Name",
+            "dataType": "SingleLine.Text",
+            "alias": "labelField",
+            "order": 0,
+            "visualSizeFactor": 150
+        },
+        {
+            "name": "colorField",
+            "displayName": "Colour",
+            "dataType": "SingleLine.Text",
+            "alias": "colorField",
+            "order": 1,
+            "visualSizeFactor": 60
+        }
+    ],
+    "records": [
+        { "id": "1", "values": { "labelField": "Feature", "colorField": "#7C3AED" } },
+        { "id": "2", "values": { "labelField": "Bug", "colorField": "#DC2626" } },
+        { "id": "3", "values": { "labelField": "Enhancement", "colorField": "#2563EB" } },
+        { "id": "4", "values": { "labelField": "Documentation", "colorField": "#059669" } },
+        { "id": "5", "values": { "labelField": "Needs triage", "colorField": "#D97706" } },
+        { "id": "6", "values": { "labelField": "Won't fix", "colorField": "#6B7280" } }
+    ]
+}

@@ -1,0 +1,48 @@
+{
+    "schemaVersion": 1,
+
+    "slug": "pcf-tag-list",
+    "name": "Tag List",
+    "tagline": "A many-to-many tag picker rendered as removable chips, bound to a dataset.",
+    "category": "data",
+    "tags": ["react", "dataset", "chips", "many-to-many"],
+
+    "control": {
+        "namespace": "PCFHub",
+        "constructor": "TagList",
+        "type": "dataset",
+        "framework": "react_virtual",
+        "manifestPath": "TagList/ControlManifest.Input.xml"
+    },
+
+    "links": {
+        "homepage": "https://github.com/pcfhub/pcf-tag-list",
+        "support": "https://github.com/pcfhub/pcf-tag-list/issues",
+        "license": "MIT"
+    },
+
+    "docs": {
+        "path": "docs"
+    },
+
+    "media": {
+        "logo": "media/logo.svg",
+        "screenshots": ["media/default.png", "media/empty.png"]
+    },
+
+    "demo": {
+        "fidelity": "mocked",
+        "bundle": "out/controls/TagList/bundle.js",
+        "styles": ["out/controls/TagList/css/TagList.css"],
+        "datasetFixture": "demo/tags.json",
+        "presets": [
+            {
+                "slug": "default",
+                "name": "Default",
+                "description": "A typical set of tags on a record.",
+                "props": {},
+                "isDefault": true
+            }
+        ]
+    }
+}

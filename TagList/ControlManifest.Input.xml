@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="PCFHub" constructor="TagList" version="0.1.0" display-name-key="TagList_Name" description-key="TagList_Desc" control-type="virtual" >
+    <external-service-usage enabled="false">
+    </external-service-usage>
+
+    <!-- Dataset binding: the set of tags currently associated to the record.
+         property-set entries let the author's view choose which columns play
+         which role, instead of the control assuming fixed column names. -->
+    <data-set name="tags" display-name-key="Tags_DataSet_Name">
+      <property-set name="labelField" display-name-key="LabelField_Name" of-type="SingleLine.Text" usage="bound" required="true" />
+      <property-set name="colorField" display-name-key="ColorField_Name" of-type="SingleLine.Text" usage="bound" required="false" />
+    </data-set>
+
+    <property name="allowCreate" display-name-key="AllowCreate_Name" description-key="AllowCreate_Desc" of-type="TwoOptions" usage="input" required="false" default-value="true" />
+    <property name="maxVisible" display-name-key="MaxVisible_Name" description-key="MaxVisible_Desc" of-type="Whole.None" usage="input" required="false" default-value="12" />
+    <property name="selectedTagId" display-name-key="SelectedTagId_Name" description-key="SelectedTagId_Desc" of-type="SingleLine.Text" usage="output" />
+
+    <resources>
+      <code path="index.ts" order="1"/>
+      <css path="css/TagList.css" order="1" />
+      <resx path="strings/TagList.1033.resx" version="1.0.0" />
+    </resources>
+
+    <!-- Adding/removing a tag associates/disassociates the record in
+         Dataverse — the reason this control cannot be demo.fidelity "full".
+         Mocked in the harness via WebApi.ts. -->
+    <feature-usage>
+      <uses-feature name="WebAPI" required="true" />
+    </feature-usage>
+  </control>
+</manifest>
