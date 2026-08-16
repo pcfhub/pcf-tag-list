@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
-    Display names and descriptions for everything declared in
-    ControlManifest.Input.xml. PCFHub reads the manifest, so these strings are
-    what appear in the component's API reference on the hub as well as in the
-    maker's properties pane.
-
-    Copy this file to add a language — TagList.3082.resx for Spanish, and so
-    on — then list it under <resources> in the manifest.
+    French (fr-FR). See TagList.1033.resx for the schema/generation notes —
+    this file only carries translated <data> values.
   -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -69,78 +64,74 @@
   </resheader>
 
   <data name="TagList_Name" xml:space="preserve">
-    <value>Tag List</value>
+    <value>Liste d'étiquettes</value>
   </data>
   <data name="TagList_Desc" xml:space="preserve">
-    <value>A many-to-many tag picker rendered as removable chips, bound to a dataset.</value>
+    <value>Un sélecteur d'étiquettes plusieurs-à-plusieurs, affiché sous forme de puces amovibles, lié à un jeu de données.</value>
   </data>
 
   <data name="Tags_DataSet_Name" xml:space="preserve">
-    <value>Tags</value>
+    <value>Étiquettes</value>
   </data>
 
   <data name="LabelField_Name" xml:space="preserve">
-    <value>Label field</value>
+    <value>Champ d'étiquette</value>
   </data>
   <data name="ColorField_Name" xml:space="preserve">
-    <value>Colour field</value>
+    <value>Champ de couleur</value>
   </data>
 
   <data name="AllowCreate_Name" xml:space="preserve">
-    <value>Allow creating new tags</value>
+    <value>Autoriser la création de nouvelles étiquettes</value>
   </data>
   <data name="AllowCreate_Desc" xml:space="preserve">
-    <value>Shows the add-tag box. Turn off for a read-only chip list.</value>
+    <value>Affiche la zone d'ajout d'étiquette. Désactivez pour une liste de puces en lecture seule.</value>
   </data>
 
   <data name="MaxVisible_Name" xml:space="preserve">
-    <value>Maximum visible chips</value>
+    <value>Nombre maximal de puces visibles</value>
   </data>
   <data name="MaxVisible_Desc" xml:space="preserve">
-    <value>Chips beyond this count collapse into a "+N more" affordance.</value>
+    <value>Les puces au-delà de ce nombre sont regroupées dans un bouton « +N de plus ».</value>
   </data>
 
   <data name="PrimaryNameField_Name" xml:space="preserve">
-    <value>Primary name field</value>
+    <value>Champ de nom principal</value>
   </data>
   <data name="PrimaryNameField_Desc" xml:space="preserve">
-    <value>Logical name of the tag entity's primary name column, written to when a new tag is created. Defaults to "name".</value>
+    <value>Nom logique de la colonne de nom principal de l'entité d'étiquette, renseignée lors de la création d'une nouvelle étiquette. La valeur par défaut est « name ».</value>
   </data>
 
   <data name="ParentLookupField_Name" xml:space="preserve">
-    <value>Parent lookup field</value>
+    <value>Champ de recherche de l'enregistrement parent</value>
   </data>
   <data name="ParentLookupField_Desc" xml:space="preserve">
-    <value>Logical name of the lookup column on the tag entity that references the parent record (e.g. regardingobjectid).</value>
+    <value>Nom logique de la colonne de recherche de l'entité d'étiquette qui référence l'enregistrement parent (par exemple, regardingobjectid).</value>
   </data>
 
   <data name="SelectedTagId_Name" xml:space="preserve">
-    <value>Selected tag id</value>
+    <value>Id. de l'étiquette sélectionnée</value>
   </data>
   <data name="SelectedTagId_Desc" xml:space="preserve">
-    <value>The id of the tag whose chip was last opened, for a form to react to.</value>
+    <value>L'id. de l'étiquette dont la puce a été ouverte en dernier, pour qu'un formulaire puisse réagir.</value>
   </data>
 
-  <!-- Runtime UI strings — read via context.resources.getString() in
-       TagListControl.tsx, not the maker's properties pane. "{0}" is a
-       placeholder the component substitutes itself (getString does no
-       formatting of its own). -->
   <data name="TagList_Loading" xml:space="preserve">
-    <value>Loading…</value>
+    <value>Chargement…</value>
   </data>
   <data name="TagList_Empty" xml:space="preserve">
-    <value>No tags yet</value>
+    <value>Aucune étiquette pour le moment</value>
   </data>
   <data name="TagList_MoreButton" xml:space="preserve">
-    <value>+{0} more</value>
+    <value>+{0} de plus</value>
   </data>
   <data name="TagList_RemoveLabel" xml:space="preserve">
-    <value>Remove {0}</value>
+    <value>Supprimer {0}</value>
   </data>
   <data name="TagList_AddPlaceholder" xml:space="preserve">
-    <value>Add a tag…</value>
+    <value>Ajouter une étiquette…</value>
   </data>
   <data name="TagList_AddButton" xml:space="preserve">
-    <value>Add</value>
+    <value>Ajouter</value>
   </data>
 </root>

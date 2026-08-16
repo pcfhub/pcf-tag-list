@@ -1,6 +1,6 @@
 {
   "name": "pcf-tag-list",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A many-to-many tag picker rendered as removable chips, bound to a dataset.",
   "license": "MIT",
   "private": true,
@@ -14,15 +14,14 @@
     "refreshTypes": "pcf-scripts refreshTypes",
     "lint": "eslint TagList --ext .ts,.tsx"
   },
-  "dependencies": {
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/powerapps-component-framework": "^1.3.0",
-    "@types/react": "^18.0.9",
-    "@types/react-dom": "^18.0.4",
+    "@types/react": "^16.14.62",
+    "@types/react-dom": "^16.9.24",
+    "react": "16.8.6",
+    "react-dom": "16.8.6",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "eslint": "^8.57.0",

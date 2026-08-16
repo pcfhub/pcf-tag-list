@@ -5,6 +5,7 @@ export interface IProps {
     allowCreate: boolean;
     maxVisible: number;
     disabled: boolean;
+    getString: (id: string) => string;
     onOpenTag: (recordId: string) => void;
     onRemoveTag: (recordId: string) => void;
     onCreateTag: (label: string) => void;
@@ -19,13 +20,25 @@ interface Chip {
 /**
  * `property-set` roles, not fixed column names — the manifest declares
  * `labelField`/`colorField` so a maker can point this at whichever columns
- * their view actually has, and the resolved column's `alias` is what a
- * record's values are keyed by (DataSet.ts, and the real platform, agree on
- * that convention).
+ * their view actually has. At runtime it's the other way round from what it
+ * looks like: `column.alias` is the property-set's own role name
+ * (`labelField`/`colorField`, fixed, from the manifest), and `column.name`
+ * is the *real* schema name of whichever column the maker actually bound —
+ * `getFormattedValue()` takes that. Confirmed against the platform type
+ * comments (`name`: "unique name of the column"; `getFormattedValue`'s
+ * `columnName` param) and two independent write-ups of this exact
+ * property-set pattern, not assumed. Get it backwards, as this did, and it
+ * still renders in the demo harness — its `DataSet.ts` mock is a dumb
+ * `record.values[columnName]` passthrough with no view-resolution rules of
+ * its own, so a self-consistent bug (`demo/tags.json` used to set `name`
+ * and `alias` to the same string) never showed up there. It fails silently
+ * everywhere else, though: `dataset.columns.find` never matches, `resolveChips`
+ * hits its `!labelColumn` guard, and the control renders zero chips no
+ * matter what data is actually bound.
  */
 function resolveChips(dataset: ComponentFramework.PropertyTypes.DataSet): Chip[] {
-    const labelColumn = dataset.columns.find((column) => column.name === 'labelField');
-    const colorColumn = dataset.columns.find((column) => column.name === 'colorField');
+    const labelColumn = dataset.columns.find((column) => column.alias === 'labelField');
+    const colorColumn = dataset.columns.find((column) => column.alias === 'colorField');
 
     if (!labelColumn) {
         return [];
@@ -36,19 +49,19 @@ function resolveChips(dataset: ComponentFramework.PropertyTypes.DataSet): Chip[]
 
         return {
             id,
-            label: record.getFormattedValue(labelColumn.alias),
-            color: colorColumn ? record.getFormattedValue(colorColumn.alias) : null,
+            label: record.getFormattedValue(labelColumn.name),
+            color: colorColumn ? record.getFormattedValue(colorColumn.name) : null,
         };
     });
 }
 
 export function TagListControl(props: IProps): React.ReactElement {
-    const { dataset, allowCreate, maxVisible, disabled } = props;
+    const { dataset, allowCreate, maxVisible, disabled, getString } = props;
     const [expanded, setExpanded] = React.useState(false);
     const [draft, setDraft] = React.useState('');
 
     if (dataset.loading) {
-        return React.createElement('div', { className: 'TagList TagList-loading' }, 'Loading…');
+        return React.createElement('div', { className: 'TagList TagList-loading' }, getString('TagList_Loading'));
     }
 
     const chips = resolveChips(dataset);
@@ -71,7 +84,7 @@ export function TagListControl(props: IProps): React.ReactElement {
             'div',
             { className: 'TagList-chips' },
             visible.length === 0 && chips.length === 0
-                ? React.createElement('span', { className: 'TagList-empty' }, 'No tags yet')
+                ? React.createElement('span', { className: 'TagList-empty' }, getString('TagList_Empty'))
                 : visible.map((chip) =>
                       React.createElement(
                           'span',
@@ -91,7 +104,7 @@ export function TagListControl(props: IProps): React.ReactElement {
                                   {
                                       type: 'button',
                                       className: 'TagList-chip-remove',
-                                      'aria-label': `Remove ${chip.label}`,
+                                      'aria-label': getString('TagList_RemoveLabel').replace('{0}', chip.label),
                                       onClick: () => props.onRemoveTag(chip.id),
                                   },
                                   '×',
@@ -102,7 +115,7 @@ export function TagListControl(props: IProps): React.ReactElement {
                 React.createElement(
                     'button',
                     { type: 'button', className: 'TagList-more', onClick: () => setExpanded(true) },
-                    `+${hidden} more`,
+                    getString('TagList_MoreButton').replace('{0}', String(hidden)),
                 ),
         ),
         allowCreate &&
@@ -113,7 +126,7 @@ export function TagListControl(props: IProps): React.ReactElement {
                 React.createElement('input', {
                     type: 'text',
                     className: 'TagList-add-input',
-                    placeholder: 'Add a tag…',
+                    placeholder: getString('TagList_AddPlaceholder'),
                     value: draft,
                     onChange: (event: React.ChangeEvent<HTMLInputElement>) => setDraft(event.target.value),
                     onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -125,7 +138,7 @@ export function TagListControl(props: IProps): React.ReactElement {
                 React.createElement(
                     'button',
                     { type: 'button', className: 'TagList-add-button', onClick: submitDraft },
-                    'Add',
+                    getString('TagList_AddButton'),
                 ),
             ),
     );

@@ -3,7 +3,7 @@
     "title": "Tags",
     "columns": [
         {
-            "name": "labelField",
+            "name": "cr123_tagname",
             "displayName": "Name",
             "dataType": "SingleLine.Text",
             "alias": "labelField",
@@ -11,7 +11,7 @@
             "visualSizeFactor": 150
         },
         {
-            "name": "colorField",
+            "name": "cr123_tagcolor",
             "displayName": "Colour",
             "dataType": "SingleLine.Text",
             "alias": "colorField",
@@ -20,11 +20,11 @@
         }
     ],
     "records": [
-        { "id": "1", "values": { "labelField": "Feature", "colorField": "#7C3AED" } },
-        { "id": "2", "values": { "labelField": "Bug", "colorField": "#DC2626" } },
-        { "id": "3", "values": { "labelField": "Enhancement", "colorField": "#2563EB" } },
-        { "id": "4", "values": { "labelField": "Documentation", "colorField": "#059669" } },
-        { "id": "5", "values": { "labelField": "Needs triage", "colorField": "#D97706" } },
-        { "id": "6", "values": { "labelField": "Won't fix", "colorField": "#6B7280" } }
+        { "id": "1", "values": { "cr123_tagname": "Feature", "cr123_tagcolor": "#7C3AED" } },
+        { "id": "2", "values": { "cr123_tagname": "Bug", "cr123_tagcolor": "#DC2626" } },
+        { "id": "3", "values": { "cr123_tagname": "Enhancement", "cr123_tagcolor": "#2563EB" } },
+        { "id": "4", "values": { "cr123_tagname": "Documentation", "cr123_tagcolor": "#059669" } },
+        { "id": "5", "values": { "cr123_tagname": "Needs triage", "cr123_tagcolor": "#D97706" } },
+        { "id": "6", "values": { "cr123_tagname": "Won't fix", "cr123_tagcolor": "#6B7280" } }
     ]
 }

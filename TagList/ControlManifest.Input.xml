@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="PCFHub" constructor="TagList" version="0.1.0" display-name-key="TagList_Name" description-key="TagList_Desc" control-type="virtual" >
+  <control namespace="PCFHub" constructor="TagList" version="0.2.0" display-name-key="TagList_Name" description-key="TagList_Desc" control-type="virtual" >
     <external-service-usage enabled="false">
     </external-service-usage>
 
@@ -14,19 +14,44 @@
 
     <property name="allowCreate" display-name-key="AllowCreate_Name" description-key="AllowCreate_Desc" of-type="TwoOptions" usage="input" required="false" default-value="true" />
     <property name="maxVisible" display-name-key="MaxVisible_Name" description-key="MaxVisible_Desc" of-type="Whole.None" usage="input" required="false" default-value="12" />
+    <property name="primaryNameField" display-name-key="PrimaryNameField_Name" description-key="PrimaryNameField_Desc" of-type="SingleLine.Text" usage="input" required="false" default-value="name" />
+
+    <!-- The record id/table this control is mounted on comes from
+         context.mode.contextInfo at runtime (index.ts), not a bound
+         property — the maker UI for a dataset control's input properties
+         only offers a static value, not "bind to form column", so the
+         property-binding approach the component framework FAQ describes
+         isn't available here. This is the one piece that IS configurable:
+         which lookup column on the tag entity points back to the parent
+         record, so the new tag can be @odata.bind-ed to it instead of
+         created as an orphan. -->
+    <property name="parentLookupField" display-name-key="ParentLookupField_Name" description-key="ParentLookupField_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
     <property name="selectedTagId" display-name-key="SelectedTagId_Name" description-key="SelectedTagId_Desc" of-type="SingleLine.Text" usage="output" />
 
     <resources>
       <code path="index.ts" order="1"/>
       <css path="css/TagList.css" order="1" />
       <resx path="strings/TagList.1033.resx" version="1.0.0" />
+      <resx path="strings/TagList.3082.resx" version="1.0.0" />
+      <resx path="strings/TagList.1036.resx" version="1.0.0" />
+      <resx path="strings/TagList.1031.resx" version="1.0.0" />
+      <resx path="strings/TagList.1041.resx" version="1.0.0" />
+      <platform-library name="React" version="16.8.6" />
     </resources>
 
     <!-- Adding/removing a tag associates/disassociates the record in
          Dataverse — the reason this control cannot be demo.fidelity "full".
-         Mocked in the harness via WebApi.ts. -->
+         Mocked in the harness via WebApi.ts. getEntityMetadata is
+         required="false": it's only called on the best-effort "link the new
+         tag to its parent" path (createTag() in index.ts), which already
+         degrades to an unlinked create when contextInfo/parentLookupField
+         are missing, so the control shouldn't fail to load on a host that
+         doesn't support it either — Context.utils.getEntityMetadata would
+         just be null there, same as everywhere else this pattern is used. -->
     <feature-usage>
       <uses-feature name="WebAPI" required="true" />
+      <uses-feature name="Utility" required="true" />
     </feature-usage>
   </control>
 </manifest>

@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
-    Display names and descriptions for everything declared in
-    ControlManifest.Input.xml. PCFHub reads the manifest, so these strings are
-    what appear in the component's API reference on the hub as well as in the
-    maker's properties pane.
-
-    Copy this file to add a language — TagList.3082.resx for Spanish, and so
-    on — then list it under <resources> in the manifest.
+    Japanese (ja-JP). See TagList.1033.resx for the schema/generation notes —
+    this file only carries translated <data> values.
   -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -69,78 +64,74 @@
   </resheader>
 
   <data name="TagList_Name" xml:space="preserve">
-    <value>Tag List</value>
+    <value>タグ リスト</value>
   </data>
   <data name="TagList_Desc" xml:space="preserve">
-    <value>A many-to-many tag picker rendered as removable chips, bound to a dataset.</value>
+    <value>データセットにバインドされた、削除可能なチップとして表示される多対多のタグ ピッカーです。</value>
   </data>
 
   <data name="Tags_DataSet_Name" xml:space="preserve">
-    <value>Tags</value>
+    <value>タグ</value>
   </data>
 
   <data name="LabelField_Name" xml:space="preserve">
-    <value>Label field</value>
+    <value>ラベル フィールド</value>
   </data>
   <data name="ColorField_Name" xml:space="preserve">
-    <value>Colour field</value>
+    <value>色フィールド</value>
   </data>
 
   <data name="AllowCreate_Name" xml:space="preserve">
-    <value>Allow creating new tags</value>
+    <value>新しいタグの作成を許可する</value>
   </data>
   <data name="AllowCreate_Desc" xml:space="preserve">
-    <value>Shows the add-tag box. Turn off for a read-only chip list.</value>
+    <value>タグ追加ボックスを表示します。読み取り専用のチップ一覧にする場合はオフにします。</value>
   </data>
 
   <data name="MaxVisible_Name" xml:space="preserve">
-    <value>Maximum visible chips</value>
+    <value>表示するチップの最大数</value>
   </data>
   <data name="MaxVisible_Desc" xml:space="preserve">
-    <value>Chips beyond this count collapse into a "+N more" affordance.</value>
+    <value>この数を超えるチップは「+N 件」のボタンにまとめられます。</value>
   </data>
 
   <data name="PrimaryNameField_Name" xml:space="preserve">
-    <value>Primary name field</value>
+    <value>主要名前フィールド</value>
   </data>
   <data name="PrimaryNameField_Desc" xml:space="preserve">
-    <value>Logical name of the tag entity's primary name column, written to when a new tag is created. Defaults to "name".</value>
+    <value>新しいタグの作成時に書き込まれる、タグ エンティティの主要名前列の論理名です。既定値は "name" です。</value>
   </data>
 
   <data name="ParentLookupField_Name" xml:space="preserve">
-    <value>Parent lookup field</value>
+    <value>親レコードの参照フィールド</value>
   </data>
   <data name="ParentLookupField_Desc" xml:space="preserve">
-    <value>Logical name of the lookup column on the tag entity that references the parent record (e.g. regardingobjectid).</value>
+    <value>親レコードを参照する、タグ エンティティの参照列の論理名です (例: regardingobjectid)。</value>
   </data>
 
   <data name="SelectedTagId_Name" xml:space="preserve">
-    <value>Selected tag id</value>
+    <value>選択されたタグ ID</value>
   </data>
   <data name="SelectedTagId_Desc" xml:space="preserve">
-    <value>The id of the tag whose chip was last opened, for a form to react to.</value>
+    <value>フォームが反応できるように、最後に開かれたタグのチップの ID です。</value>
   </data>
 
-  <!-- Runtime UI strings — read via context.resources.getString() in
-       TagListControl.tsx, not the maker's properties pane. "{0}" is a
-       placeholder the component substitutes itself (getString does no
-       formatting of its own). -->
   <data name="TagList_Loading" xml:space="preserve">
-    <value>Loading…</value>
+    <value>読み込み中…</value>
   </data>
   <data name="TagList_Empty" xml:space="preserve">
-    <value>No tags yet</value>
+    <value>タグはまだありません</value>
   </data>
   <data name="TagList_MoreButton" xml:space="preserve">
-    <value>+{0} more</value>
+    <value>他 {0} 件</value>
   </data>
   <data name="TagList_RemoveLabel" xml:space="preserve">
-    <value>Remove {0}</value>
+    <value>{0} を削除</value>
   </data>
   <data name="TagList_AddPlaceholder" xml:space="preserve">
-    <value>Add a tag…</value>
+    <value>タグを追加…</value>
   </data>
   <data name="TagList_AddButton" xml:space="preserve">
-    <value>Add</value>
+    <value>追加</value>
   </data>
 </root>
