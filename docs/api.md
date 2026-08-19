@@ -22,9 +22,13 @@ order: 5
 
 ::props-table{kind=input}
 
-## Bound properties
+## Dataset
 
-::props-table{kind=bound}
+::props-table{kind=dataset}
+
+## Dataset columns
+
+::props-table{kind=dataset_column}
 
 ## Outputs
 
