@@ -18,7 +18,7 @@ where makers and agents both add and remove freely.
 | Label field | the tag entity's `name` column |
 | Colour field | the tag entity's `color` column |
 
-::image{src=media/example-basic.png alt="Tag List with default settings on a case form"}
+::image{src=media/screenshot.png alt="Two removable tag chips above an Add a tag input and an Add button, which is the default configuration"}
 
 ## A read-only, space-constrained summary
 
