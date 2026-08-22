@@ -31,6 +31,7 @@
     <ExcludeDirectories Include="$(MSBuildThisFileDirectory)\.github\**" />
     <ExcludeDirectories Include="$(MSBuildThisFileDirectory)\.gitignore" />
     <ExcludeDirectories Include="$(MSBuildThisFileDirectory)\bin\**" />
+    <ExcludeDirectories Include="$(MSBuildThisFileDirectory)\demo\**" />
     <ExcludeDirectories Include="$(MSBuildThisFileDirectory)\docs\**" />
     <ExcludeDirectories Include="$(MSBuildThisFileDirectory)\media\**" />
     <ExcludeDirectories Include="$(MSBuildThisFileDirectory)\node_modules\**" />
