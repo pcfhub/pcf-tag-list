@@ -1,6 +1,6 @@
 {
   "name": "pcf-tag-list",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A many-to-many tag picker rendered as removable chips, bound to a dataset.",
   "license": "MIT",
   "private": true,

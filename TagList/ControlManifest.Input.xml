@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="PCFHub" constructor="TagList" version="0.2.0" display-name-key="TagList_Name" description-key="TagList_Desc" control-type="virtual" >
+  <control namespace="PCFHub" constructor="TagList" version="0.2.1" display-name-key="TagList_Name" description-key="TagList_Desc" control-type="virtual" >
     <external-service-usage enabled="false">
     </external-service-usage>
 
