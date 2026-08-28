@@ -224,16 +224,31 @@ not a live contract, but documentation should still be true, so this
 control's copy is fixed. Worth someone fixing pcf-code-editor's copy too,
 separately from this task.
 
+## A failed Web API call is an unhandled rejection
+
+Found by the dev rig on its first run, which did not fail an assertion — it
+**ended the Node process**, which is what an unhandled promise rejection does
+there.
+
+`onRemoveTag` chains `.finally(() => dataset.refresh())` onto
+`webAPI.deleteRecord` and no `.catch`. `createTag` has the same shape. So a
+rejected call — a plugin refusing the delete, a privilege the user does not
+have, the record already gone — produces an unhandled rejection. In a browser
+that is a console error nobody sees: the view refreshes, the tag is still
+there, and the control says nothing about why.
+
+Deliberately **not** fixed here, because it is not a one-line change. `IProps`
+carries no error surface, so somebody has to decide what the user is told — a
+message on the chip, a status line, a toast — and that is a design decision
+rather than a missing `catch`. The smoke suite carries a comment where the
+assertion would go, and `dev/host.js` already supports `webApiFails: true` to
+drive it once there is a decision to assert.
+
 ## Still open
 
+- The unhandled rejection above.
 - Category: set to `data` (existing hub category) — reasonable but not
   confirmed against how the hub actually buckets dataset-view controls.
 - `docs/*.md` are still the template's empty stubs — not written.
-- No GitHub repo exists yet; this is a local scaffold under
-  `C:\dev\pcf-components\pcf-tag-list` with `npm install` run and a working
-  build, not yet `git init`'d or pushed anywhere.
-- Solution packaging (`msbuild` via the Windows-only release workflow) was
-  not attempted — only the Node/webpack half of the pipeline (`pcf-scripts
-  build`) was verified locally.
 - The "search existing tags to associate" behaviour noted above under
   "What it does" is unimplemented; `onCreateTag` always mints a new tag.

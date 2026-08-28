@@ -12,7 +12,8 @@
     "rebuild": "pcf-scripts rebuild",
     "start": "pcf-scripts start",
     "refreshTypes": "pcf-scripts refreshTypes",
-    "lint": "eslint TagList --ext .ts,.tsx"
+    "lint": "eslint TagList --ext .ts,.tsx",
+    "smoke": "node dev/smoke.js"
   },
   "dependencies": {},
   "devDependencies": {
