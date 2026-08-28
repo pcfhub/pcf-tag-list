@@ -73,7 +73,7 @@
     var DESCENDING = 1;
 
     var STRINGS = {
-        TagList_Name: '__TITLE__',
+        TagList_Name: 'Tag List',
         TagList_Empty: 'No records.',
         TagList_Error: 'The records could not be loaded.',
         TagList_Loading: 'Loading…',
