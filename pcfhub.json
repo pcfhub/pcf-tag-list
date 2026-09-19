@@ -5,7 +5,8 @@
     "name": "Tag List",
     "tagline": "A many-to-many tag picker rendered as removable chips, bound to a dataset.",
     "category": "data",
-    "tags": ["react", "dataset", "chips", "many-to-many"],
+    "hosts": ["model-driven"],
+    "tags": ["react", "chips", "many-to-many"],
 
     "control": {
         "namespace": "PCFHub",
