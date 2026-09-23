@@ -126,7 +126,7 @@ showed it.
 
 ## Screenshots
 
-`media/screenshot.png`, `search.png` and `narrow.png` are rendered by headless
+`media/chips.png`, `search.png` and `narrow.png` are rendered by headless
 Chrome from a page kept outside the repository, against `npm run harness` on port
 8100: the built bundle and stylesheet, the dev fixture, the shipped English
 strings, `--force-device-scale-factor=2`, `--virtual-time-budget=5000`, and

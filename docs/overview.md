@@ -9,7 +9,7 @@ order: 1
 A multi-select lookup for model-driven forms: the records a record is related
 to, shown as chips, with a search box to attach more.
 
-::image{src=media/screenshot.png alt="Tag List showing eight coloured chips and a +6 more link above a search box" zoom}
+::image{src=media/chips.png alt="Tag List showing eight coloured chips and a +6 more link above a search box" zoom}
 
 ## Why this one
 
