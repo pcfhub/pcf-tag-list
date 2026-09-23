@@ -38,8 +38,8 @@ Three smaller changes follow from it:
    flow: tags whose lookup is empty.
 :::
 
-0.4.0 adds only **Sample data**, which feeds the demo on this page. Leave it
-blank; there is nothing else to do.
+0.5.0 removes **Sample data**, which 0.4.0 added for the demo on this page.
+Nothing to do: it was blank on every form.
 
 :::callout{type=warning}
 If 0.2.x was used on a native many-to-many subgrid, tags removed with it were

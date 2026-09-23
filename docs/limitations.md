@@ -45,13 +45,10 @@ for adding.
 There is no undo in the control. A tag removed by mistake is attached again
 from the search box, since the tag itself still exists.
 
-## The demo on this page plays against sample data
+## The demo on this page runs on sample data
 
-The hub's demo has no Dataverse behind it, so each preset hands the control a
-small tag table in the **Sample data** property, and search, linking, creating
-and unlinking run against that instead. Everything else is the control's own
-code. Browse is not offered there, because the lookup dialog it opens exists
-only in a model-driven app, and nothing is saved: changes last until the
-preset changes or the page reloads.
-
-On a form, leave **Sample data** blank.
+The demo's account and tags live in your browser, not in Dataverse. Searching,
+linking, unlinking, creating and Browse all work, through the same requests a
+form sends; nothing is saved, and Reset puts the demo back. Browse opens a
+simpler dialog than the platform's, with no views, and a refused request
+cannot be shown there because the demo grants everything.

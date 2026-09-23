@@ -137,30 +137,31 @@ simulated, a real mouse click on an option links it exactly once and a click on
 No React warnings. The suite
 renders without layout and sees none of this.
 
-## The demo's sample route (0.4.0)
+## The demo, and the property that was taken back (0.4.0 → 0.5.0)
 
-The hub's harness, read from its source (`resources/js/demo-harness/context`,
-2026-09-23): no `contextInfo`, no `page`, a `webAPI` whose every method
-rejects, `lookupObjects` resolving `[]`, `openConfirmDialog` as
-`window.confirm`, and a dataset rebuilt from `demo/tags.json` on every render,
-so `refresh()` changes nothing. 0.3.x therefore demoed as its no-record notice.
+The hub's harness had no `contextInfo`, no `page`, a `webAPI` rejecting every
+call, and a dataset rebuilt from `demo/tags.json` on every render, so 0.3.x
+demoed as its no-record notice. 0.4.0 added a `sampleData` input the control
+played against instead. It worked and was rejected: a property that exists only
+for the demo sits in every maker's panel on a real form. 0.5.0 removes it.
 
-0.4.0 adds a `sampleData` input (the skill's sample-data route). Two things
-this control needed that `pcf-hierarchy-view` and `pcf-audit-history` did not:
+The data moved to the demo instead. The hub's harness now reads an optional
+`dataverse` section in a dataset fixture (the hub repository's
+`docs/demo-harness-dataverse.md`) and answers `contextInfo`, `getClientUrl`,
+`getEntityMetadata`, an OData subset on `webAPI`, relationship metadata, `$ref`
+and `lookupObjects` from it. `demo/tags.json` declares the probe's shape (an
+N:N *and* a lookup between account and tag), so the "more than one
+relationship" preset is the control reading real metadata, not a declared
+state. Checked in the hub's own harness from its Vite dev server: search, a
+clicked suggestion, create, unlink, Browse with two picks, the ambiguous
+preset and Reset.
 
-- **The chips come from the sample, not the dataset.** They are dataset rows
-  on a form, and the harness's dataset cannot change, so a link on the sample
-  route would otherwise do nothing visible. `service.listing()` is the one
-  place that chooses; the component never asks which route it is on.
-- **The component is keyed by the document.** The hub switches presets on a
-  mounted control, and in its harness the previous preset's refusal line
-  stayed on screen after a switch. A new key remounts; on a form the key is
-  `''` and never moves.
-
-Checked in the hub's own harness (its Vite dev server, opened top-level so the
-page answers its own `harness:init`): every preset renders styled, a
-suggestion is clicked, a tag is created with Enter and one unlinked, a preset
-switch starts clean, and the dark theme applies.
+**The list is absolute, not fixed** (0.5.0). In the hub's demo 0.4.0's fixed
+list flipped up over the chips, because the frame is sized to its content and
+the hub's measure-height deliberately skips fixed subtrees, so the frame never
+grew and there was never room below. The list is now absolute inside a layer
+at the page's origin, which the hub measures and grows to fit, and it flips
+upward only with at least 160px above.
 
 ## Design decisions worth keeping
 
@@ -197,6 +198,9 @@ switch starts clean, and the dark theme applies.
   after `pcf-compact-list`, which also has not seen it on a form).
 - **The stylesheet on a real form**, including the dark theme and forced
   colours. Checked in `dev/harness.html` with `getComputedStyle` only.
+- **The absolute list on the real form** (0.5.0; fixed from 0.3.1 to 0.4.0):
+  overlaid, clickable, themed, following the field on scroll, and flipping
+  upward near the bottom of the form.
 - **The lifted list on the real form** (0.3.2): overlaid, clickable, themed,
   and following the field when the form scrolls. The form's own scroll container
   is an ancestor, so the capture-phase scroll listener should see it.
@@ -226,5 +230,5 @@ the window to 320px.
 - 0.2.x removed a chip with `deleteRecord` on the target table. On a native
   many-to-many that deleted the tag everywhere. Promoted to the skill's
   *`deleteRecord`, beyond the N:N trap*; fixed in 0.3.0.
-- 0.3.x demoed on the hub at `limited`, as its no-record notice. 0.4.0's
-  `sampleData` brought it back to `mocked`.
+- 0.4.0 added a demo-only `sampleData` input; 0.5.0 removed it in favour of a
+  stand-in Dataverse in the hub's harness.

@@ -46,11 +46,10 @@
     "demo": {
         "fidelity": "mocked",
         "limitations": [
-            "The tags come from the preset's Sample data, not from Dataverse. On a form the chips are the subgrid's view, search asks the tag table through the Web API, and linking and unlinking are $ref requests on the relationship; there is no environment behind the demo, so each preset carries a JSON tag table in the sampleData property and the control plays against that. Search, attach, create, unlink, +N more and the refusal line all run the control's own code against it.",
-            "The relationship is declared in the sample. On a form the control reads it from the two tables' metadata, and says so when more than one relationship joins them, as the 'More than one relationship' preset shows.",
-            "Browse is not offered: it opens the platform's own lookup dialog, which only a model-driven app has.",
+            "The demo's Dataverse is the preset's fixture, held in the browser: an account with a native many-to-many to a table of 24 tags, and a lookup from tag to account as well. Search, linking, unlinking and creating go through the same Web API calls and $ref requests a form sends, answered from that fixture; nothing is saved, and Reset or a reload puts it back.",
+            "Browse opens the demo's own lookup dialog, a searchable list of the tag table. The platform's dialog also offers views and columns, which the demo's does not.",
             "Opening a tag reports it through the Selected tag output and navigates nowhere. On a form it opens the tag's record.",
-            "Changes last until the preset changes or the page reloads; nothing is saved."
+            "A refused request, such as a user missing the Append privilege, cannot be shown: the demo's Dataverse grants everything. The refusal line is in the screenshots."
         ],
         "bundle": "out/controls/TagList/bundle.js",
         "styles": [
@@ -62,15 +61,14 @@
                 "slug": "default",
                 "name": "Many-to-many",
                 "isDefault": true,
-                "description": "An account with six tags from a shared vocabulary of 24. Type to find more (try \"re\"), pick one to link it, or type a new name to create it. The × unlinks a tag; the tag itself stays and can be found again.",
+                "description": "An account with six tags from a shared vocabulary of 24. Type to find more (try \"re\"), pick one to link it, or type a new name to create it. The magnifier browses the whole table. The × unlinks a tag; the tag itself stays and can be found again.",
                 "props": {
                     "allowCreate": true,
                     "allowNewTags": true,
                     "maxVisible": 12,
                     "primaryNameField": "name",
-                    "relationshipName": "",
-                    "parentLookupField": "",
-                    "sampleData": "{\"binding\":\"manyToMany\",\"tags\":[{\"id\":\"t1\",\"name\":\"Priority\",\"color\":\"#DC2626\"},{\"id\":\"t2\",\"name\":\"Enterprise\",\"color\":\"#2563EB\"},{\"id\":\"t3\",\"name\":\"Renewal due\",\"color\":\"#D97706\"},{\"id\":\"t4\",\"name\":\"Partner\",\"color\":\"#059669\"},{\"id\":\"t5\",\"name\":\"Referral\",\"color\":\"#7C3AED\"},{\"id\":\"t6\",\"name\":\"Public sector\",\"color\":\"#0891B2\"},{\"id\":\"t7\",\"name\":\"Key account\",\"color\":\"#BE185D\"},{\"id\":\"t8\",\"name\":\"Upsell\",\"color\":\"#65A30D\"},{\"id\":\"t9\",\"name\":\"Churn risk\",\"color\":\"#B91C1C\"},{\"id\":\"t10\",\"name\":\"Onboarding\",\"color\":\"#4F46E5\"},{\"id\":\"t11\",\"name\":\"Pilot\",\"color\":\"#0D9488\"},{\"id\":\"t12\",\"name\":\"Healthcare\",\"color\":\"#9333EA\"},{\"id\":\"t13\",\"name\":\"Manufacturing\",\"color\":\"#475569\"},{\"id\":\"t14\",\"name\":\"Retail\",\"color\":\"#EA580C\"},{\"id\":\"t15\",\"name\":\"Finance\",\"color\":\"#1D4ED8\"},{\"id\":\"t16\",\"name\":\"Education\",\"color\":\"#16A34A\"},{\"id\":\"t17\",\"name\":\"Nonprofit\",\"color\":\"#A16207\"},{\"id\":\"t18\",\"name\":\"EMEA\",\"color\":\"#0369A1\"},{\"id\":\"t19\",\"name\":\"APAC\",\"color\":\"#C026D3\"},{\"id\":\"t20\",\"name\":\"Americas\",\"color\":\"#CA8A04\"},{\"id\":\"t21\",\"name\":\"Event lead\",\"color\":\"#DB2777\"},{\"id\":\"t22\",\"name\":\"Newsletter\",\"color\":\"#6B7280\"},{\"id\":\"t23\",\"name\":\"Strategic\",\"color\":\"#7C2D12\"},{\"id\":\"t24\",\"name\":\"Pricing exception\",\"color\":\"#B45309\"}],\"linked\":[\"t1\",\"t2\",\"t3\",\"t4\",\"t18\",\"t7\"]}"
+                    "relationshipName": "cll_Account_cll_Tag_cll_Tag",
+                    "parentLookupField": ""
                 }
             },
             {
@@ -83,69 +81,36 @@
                     "allowNewTags": false,
                     "maxVisible": 12,
                     "primaryNameField": "name",
-                    "relationshipName": "",
-                    "parentLookupField": "",
-                    "sampleData": "{\"binding\":\"manyToMany\",\"tags\":[{\"id\":\"t1\",\"name\":\"Priority\",\"color\":\"#DC2626\"},{\"id\":\"t2\",\"name\":\"Enterprise\",\"color\":\"#2563EB\"},{\"id\":\"t3\",\"name\":\"Renewal due\",\"color\":\"#D97706\"},{\"id\":\"t4\",\"name\":\"Partner\",\"color\":\"#059669\"},{\"id\":\"t5\",\"name\":\"Referral\",\"color\":\"#7C3AED\"},{\"id\":\"t6\",\"name\":\"Public sector\",\"color\":\"#0891B2\"},{\"id\":\"t7\",\"name\":\"Key account\",\"color\":\"#BE185D\"},{\"id\":\"t8\",\"name\":\"Upsell\",\"color\":\"#65A30D\"},{\"id\":\"t9\",\"name\":\"Churn risk\",\"color\":\"#B91C1C\"},{\"id\":\"t10\",\"name\":\"Onboarding\",\"color\":\"#4F46E5\"},{\"id\":\"t11\",\"name\":\"Pilot\",\"color\":\"#0D9488\"},{\"id\":\"t12\",\"name\":\"Healthcare\",\"color\":\"#9333EA\"},{\"id\":\"t13\",\"name\":\"Manufacturing\",\"color\":\"#475569\"},{\"id\":\"t14\",\"name\":\"Retail\",\"color\":\"#EA580C\"},{\"id\":\"t15\",\"name\":\"Finance\",\"color\":\"#1D4ED8\"},{\"id\":\"t16\",\"name\":\"Education\",\"color\":\"#16A34A\"},{\"id\":\"t17\",\"name\":\"Nonprofit\",\"color\":\"#A16207\"},{\"id\":\"t18\",\"name\":\"EMEA\",\"color\":\"#0369A1\"},{\"id\":\"t19\",\"name\":\"APAC\",\"color\":\"#C026D3\"},{\"id\":\"t20\",\"name\":\"Americas\",\"color\":\"#CA8A04\"},{\"id\":\"t21\",\"name\":\"Event lead\",\"color\":\"#DB2777\"},{\"id\":\"t22\",\"name\":\"Newsletter\",\"color\":\"#6B7280\"},{\"id\":\"t23\",\"name\":\"Strategic\",\"color\":\"#7C2D12\"},{\"id\":\"t24\",\"name\":\"Pricing exception\",\"color\":\"#B45309\"}],\"linked\":[\"t1\",\"t2\",\"t3\",\"t4\",\"t18\",\"t7\"]}"
+                    "relationshipName": "cll_Account_cll_Tag_cll_Tag",
+                    "parentLookupField": ""
                 }
             },
             {
-                "slug": "many-tags",
+                "slug": "few-visible",
                 "name": "More tags than fit",
                 "isDefault": false,
-                "description": "Fifteen tags with Max visible at 6, so the rest collapse into +9 more until expanded.",
+                "description": "Max visible at 3, so the rest collapse into +3 more until expanded.",
                 "props": {
                     "allowCreate": true,
                     "allowNewTags": true,
-                    "maxVisible": 6,
+                    "maxVisible": 3,
                     "primaryNameField": "name",
-                    "relationshipName": "",
-                    "parentLookupField": "",
-                    "sampleData": "{\"binding\":\"manyToMany\",\"tags\":[{\"id\":\"t1\",\"name\":\"Priority\",\"color\":\"#DC2626\"},{\"id\":\"t2\",\"name\":\"Enterprise\",\"color\":\"#2563EB\"},{\"id\":\"t3\",\"name\":\"Renewal due\",\"color\":\"#D97706\"},{\"id\":\"t4\",\"name\":\"Partner\",\"color\":\"#059669\"},{\"id\":\"t5\",\"name\":\"Referral\",\"color\":\"#7C3AED\"},{\"id\":\"t6\",\"name\":\"Public sector\",\"color\":\"#0891B2\"},{\"id\":\"t7\",\"name\":\"Key account\",\"color\":\"#BE185D\"},{\"id\":\"t8\",\"name\":\"Upsell\",\"color\":\"#65A30D\"},{\"id\":\"t9\",\"name\":\"Churn risk\",\"color\":\"#B91C1C\"},{\"id\":\"t10\",\"name\":\"Onboarding\",\"color\":\"#4F46E5\"},{\"id\":\"t11\",\"name\":\"Pilot\",\"color\":\"#0D9488\"},{\"id\":\"t12\",\"name\":\"Healthcare\",\"color\":\"#9333EA\"},{\"id\":\"t13\",\"name\":\"Manufacturing\",\"color\":\"#475569\"},{\"id\":\"t14\",\"name\":\"Retail\",\"color\":\"#EA580C\"},{\"id\":\"t15\",\"name\":\"Finance\",\"color\":\"#1D4ED8\"},{\"id\":\"t16\",\"name\":\"Education\",\"color\":\"#16A34A\"},{\"id\":\"t17\",\"name\":\"Nonprofit\",\"color\":\"#A16207\"},{\"id\":\"t18\",\"name\":\"EMEA\",\"color\":\"#0369A1\"},{\"id\":\"t19\",\"name\":\"APAC\",\"color\":\"#C026D3\"},{\"id\":\"t20\",\"name\":\"Americas\",\"color\":\"#CA8A04\"},{\"id\":\"t21\",\"name\":\"Event lead\",\"color\":\"#DB2777\"},{\"id\":\"t22\",\"name\":\"Newsletter\",\"color\":\"#6B7280\"},{\"id\":\"t23\",\"name\":\"Strategic\",\"color\":\"#7C2D12\"},{\"id\":\"t24\",\"name\":\"Pricing exception\",\"color\":\"#B45309\"}],\"linked\":[\"t1\",\"t2\",\"t3\",\"t4\",\"t5\",\"t6\",\"t7\",\"t8\",\"t10\",\"t11\",\"t12\",\"t15\",\"t18\",\"t21\",\"t23\"]}"
-                }
-            },
-            {
-                "slug": "one-to-many",
-                "name": "One-to-many (a lookup on the tag)",
-                "isDefault": false,
-                "description": "Tags that belong to one record through a lookup. Search leaves out tags another account already owns (EMEA, APAC and Americas here), because attaching one would take it from that account. The × clears the lookup rather than deleting the tag.",
-                "props": {
-                    "allowCreate": true,
-                    "allowNewTags": true,
-                    "maxVisible": 12,
-                    "primaryNameField": "name",
-                    "relationshipName": "cll_account",
-                    "parentLookupField": "",
-                    "sampleData": "{\"binding\":\"oneToMany\",\"tags\":[{\"id\":\"t1\",\"name\":\"Priority\",\"color\":\"#DC2626\"},{\"id\":\"t2\",\"name\":\"Enterprise\",\"color\":\"#2563EB\"},{\"id\":\"t3\",\"name\":\"Renewal due\",\"color\":\"#D97706\"},{\"id\":\"t4\",\"name\":\"Partner\",\"color\":\"#059669\"},{\"id\":\"t5\",\"name\":\"Referral\",\"color\":\"#7C3AED\"},{\"id\":\"t6\",\"name\":\"Public sector\",\"color\":\"#0891B2\"},{\"id\":\"t7\",\"name\":\"Key account\",\"color\":\"#BE185D\"},{\"id\":\"t8\",\"name\":\"Upsell\",\"color\":\"#65A30D\"},{\"id\":\"t9\",\"name\":\"Churn risk\",\"color\":\"#B91C1C\"},{\"id\":\"t10\",\"name\":\"Onboarding\",\"color\":\"#4F46E5\"},{\"id\":\"t11\",\"name\":\"Pilot\",\"color\":\"#0D9488\"},{\"id\":\"t12\",\"name\":\"Healthcare\",\"color\":\"#9333EA\"},{\"id\":\"t13\",\"name\":\"Manufacturing\",\"color\":\"#475569\"},{\"id\":\"t14\",\"name\":\"Retail\",\"color\":\"#EA580C\"},{\"id\":\"t15\",\"name\":\"Finance\",\"color\":\"#1D4ED8\"},{\"id\":\"t16\",\"name\":\"Education\",\"color\":\"#16A34A\"},{\"id\":\"t17\",\"name\":\"Nonprofit\",\"color\":\"#A16207\"},{\"id\":\"t18\",\"name\":\"EMEA\",\"color\":\"#0369A1\"},{\"id\":\"t19\",\"name\":\"APAC\",\"color\":\"#C026D3\"},{\"id\":\"t20\",\"name\":\"Americas\",\"color\":\"#CA8A04\"},{\"id\":\"t21\",\"name\":\"Event lead\",\"color\":\"#DB2777\"},{\"id\":\"t22\",\"name\":\"Newsletter\",\"color\":\"#6B7280\"},{\"id\":\"t23\",\"name\":\"Strategic\",\"color\":\"#7C2D12\"},{\"id\":\"t24\",\"name\":\"Pricing exception\",\"color\":\"#B45309\"}],\"linked\":[\"t1\",\"t2\",\"t9\"],\"elsewhere\":[\"t18\",\"t19\",\"t20\"]}"
-                }
-            },
-            {
-                "slug": "refused",
-                "name": "Missing privilege",
-                "isDefault": false,
-                "description": "The user may add tags and not remove them. Press × on a chip: the unlink is refused, the chip stays, and the server's own sentence appears under the control.",
-                "props": {
-                    "allowCreate": true,
-                    "allowNewTags": true,
-                    "maxVisible": 12,
-                    "primaryNameField": "name",
-                    "relationshipName": "",
-                    "parentLookupField": "",
-                    "sampleData": "{\"binding\":\"manyToMany\",\"tags\":[{\"id\":\"t1\",\"name\":\"Priority\",\"color\":\"#DC2626\"},{\"id\":\"t2\",\"name\":\"Enterprise\",\"color\":\"#2563EB\"},{\"id\":\"t3\",\"name\":\"Renewal due\",\"color\":\"#D97706\"},{\"id\":\"t4\",\"name\":\"Partner\",\"color\":\"#059669\"},{\"id\":\"t5\",\"name\":\"Referral\",\"color\":\"#7C3AED\"},{\"id\":\"t6\",\"name\":\"Public sector\",\"color\":\"#0891B2\"},{\"id\":\"t7\",\"name\":\"Key account\",\"color\":\"#BE185D\"},{\"id\":\"t8\",\"name\":\"Upsell\",\"color\":\"#65A30D\"},{\"id\":\"t9\",\"name\":\"Churn risk\",\"color\":\"#B91C1C\"},{\"id\":\"t10\",\"name\":\"Onboarding\",\"color\":\"#4F46E5\"},{\"id\":\"t11\",\"name\":\"Pilot\",\"color\":\"#0D9488\"},{\"id\":\"t12\",\"name\":\"Healthcare\",\"color\":\"#9333EA\"},{\"id\":\"t13\",\"name\":\"Manufacturing\",\"color\":\"#475569\"},{\"id\":\"t14\",\"name\":\"Retail\",\"color\":\"#EA580C\"},{\"id\":\"t15\",\"name\":\"Finance\",\"color\":\"#1D4ED8\"},{\"id\":\"t16\",\"name\":\"Education\",\"color\":\"#16A34A\"},{\"id\":\"t17\",\"name\":\"Nonprofit\",\"color\":\"#A16207\"},{\"id\":\"t18\",\"name\":\"EMEA\",\"color\":\"#0369A1\"},{\"id\":\"t19\",\"name\":\"APAC\",\"color\":\"#C026D3\"},{\"id\":\"t20\",\"name\":\"Americas\",\"color\":\"#CA8A04\"},{\"id\":\"t21\",\"name\":\"Event lead\",\"color\":\"#DB2777\"},{\"id\":\"t22\",\"name\":\"Newsletter\",\"color\":\"#6B7280\"},{\"id\":\"t23\",\"name\":\"Strategic\",\"color\":\"#7C2D12\"},{\"id\":\"t24\",\"name\":\"Pricing exception\",\"color\":\"#B45309\"}],\"linked\":[\"t1\",\"t2\",\"t3\",\"t4\",\"t18\",\"t7\"],\"refuse\":{\"remove\":\"Principal user is missing prvAppendTocll_tag privilege on the Tag table.\"}}"
+                    "relationshipName": "cll_Account_cll_Tag_cll_Tag",
+                    "parentLookupField": ""
                 }
             },
             {
                 "slug": "ambiguous",
                 "name": "More than one relationship",
                 "isDefault": false,
-                "description": "What a maker sees when two relationships join the tables and Relationship name is blank: the chips, no add box, and the names to choose from.",
+                "description": "Relationship name left blank. The two tables are joined by a many-to-many and by a lookup, so the control shows the chips, no add box, and the two names to choose from — what a maker sees before configuring it.",
                 "props": {
                     "allowCreate": true,
                     "allowNewTags": true,
                     "maxVisible": 12,
                     "primaryNameField": "name",
                     "relationshipName": "",
-                    "parentLookupField": "",
-                    "sampleData": "{\"binding\":\"ambiguous\",\"tags\":[{\"id\":\"t1\",\"name\":\"Priority\",\"color\":\"#DC2626\"},{\"id\":\"t2\",\"name\":\"Enterprise\",\"color\":\"#2563EB\"},{\"id\":\"t3\",\"name\":\"Renewal due\",\"color\":\"#D97706\"},{\"id\":\"t4\",\"name\":\"Partner\",\"color\":\"#059669\"},{\"id\":\"t5\",\"name\":\"Referral\",\"color\":\"#7C3AED\"},{\"id\":\"t6\",\"name\":\"Public sector\",\"color\":\"#0891B2\"},{\"id\":\"t7\",\"name\":\"Key account\",\"color\":\"#BE185D\"},{\"id\":\"t8\",\"name\":\"Upsell\",\"color\":\"#65A30D\"},{\"id\":\"t9\",\"name\":\"Churn risk\",\"color\":\"#B91C1C\"},{\"id\":\"t10\",\"name\":\"Onboarding\",\"color\":\"#4F46E5\"},{\"id\":\"t11\",\"name\":\"Pilot\",\"color\":\"#0D9488\"},{\"id\":\"t12\",\"name\":\"Healthcare\",\"color\":\"#9333EA\"},{\"id\":\"t13\",\"name\":\"Manufacturing\",\"color\":\"#475569\"},{\"id\":\"t14\",\"name\":\"Retail\",\"color\":\"#EA580C\"},{\"id\":\"t15\",\"name\":\"Finance\",\"color\":\"#1D4ED8\"},{\"id\":\"t16\",\"name\":\"Education\",\"color\":\"#16A34A\"},{\"id\":\"t17\",\"name\":\"Nonprofit\",\"color\":\"#A16207\"},{\"id\":\"t18\",\"name\":\"EMEA\",\"color\":\"#0369A1\"},{\"id\":\"t19\",\"name\":\"APAC\",\"color\":\"#C026D3\"},{\"id\":\"t20\",\"name\":\"Americas\",\"color\":\"#CA8A04\"},{\"id\":\"t21\",\"name\":\"Event lead\",\"color\":\"#DB2777\"},{\"id\":\"t22\",\"name\":\"Newsletter\",\"color\":\"#6B7280\"},{\"id\":\"t23\",\"name\":\"Strategic\",\"color\":\"#7C2D12\"},{\"id\":\"t24\",\"name\":\"Pricing exception\",\"color\":\"#B45309\"}],\"linked\":[\"t1\",\"t2\",\"t3\",\"t4\",\"t18\",\"t7\"],\"candidates\":[\"cll_Account_cll_Tag_cll_Tag\",\"cll_account_cll_tag\"]}"
+                    "parentLookupField": ""
                 }
             }
         ]

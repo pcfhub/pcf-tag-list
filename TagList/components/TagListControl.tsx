@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { Binding, canAttach, canChange } from '../binding';
-import { Chip } from '../chips';
 import { Found } from '../platform';
 import { Resolved, TagService } from '../service';
-import { copyTheme, liftToBody, Placement, placeFixed } from './placement';
+import { copyTheme, liftToBody, Placement, placeFloating } from './placement';
 
 export interface IProps {
     dataset: ComponentFramework.PropertyTypes.DataSet;
@@ -22,10 +21,41 @@ export interface IProps {
     onOpenTag: (recordId: string) => void;
 }
 
+interface Chip {
+    id: string;
+    label: string;
+    color: string | null;
+}
+
 type Option = { kind: 'tag'; tag: Found } | { kind: 'create'; name: string };
 
 /** How long typing has to pause before a search is sent. */
 export const SEARCH_DELAY_MS = 250;
+
+/**
+ * `property-set` roles, not fixed column names. `column.alias` is the role
+ * (`labelField`/`colorField`, from the manifest) and `column.name` is the real
+ * column the maker bound — `getFormattedValue()` takes the latter. 0.1.x had
+ * these backwards and rendered no chips on any real form (SPEC.md).
+ */
+export function resolveChips(dataset: ComponentFramework.PropertyTypes.DataSet): Chip[] {
+    const labelColumn = dataset.columns.find((column) => column.alias === 'labelField');
+    const colorColumn = dataset.columns.find((column) => column.alias === 'colorField');
+
+    if (!labelColumn) {
+        return [];
+    }
+
+    return dataset.sortedRecordIds.map((id) => {
+        const record = dataset.records[id];
+
+        return {
+            id,
+            label: record.getFormattedValue(labelColumn.name),
+            color: colorColumn ? record.getFormattedValue(colorColumn.name) || null : null,
+        };
+    });
+}
 
 /**
  * What to say about a binding the control cannot act on, or `null` when there
@@ -47,7 +77,6 @@ export function notice(binding: Binding | null, getString: (id: string) => strin
                 noRelationship: getString('TagList_NoticeNoRelationship'),
                 unmatchedName: getString('TagList_NoticeUnmatched'),
                 selfReferential: getString('TagList_NoticeSelf'),
-                badSample: getString('TagList_NoticeSample'),
             }[binding.reason];
         default:
             return null;
@@ -84,8 +113,6 @@ export function TagListControl(props: IProps): React.ReactElement {
     });
     const [placement, setPlacement] = React.useState<Placement>({ kind: 'pending' });
     const wantsList = open && text.trim() !== '';
-    // The view's chips on a form, the sample's in the demo — the service decides.
-    const listing = service.listing(dataset);
 
     React.useEffect(
         () => () => {
@@ -228,7 +255,11 @@ export function TagListControl(props: IProps): React.ReactElement {
             copyTheme(rootRef.current, list.parentElement);
         }
 
-        const place = (): void => setPlacement(placeFixed(field.getBoundingClientRect(), window.innerHeight));
+        const layer = list.parentElement;
+        const place = (): void =>
+            setPlacement(
+                placeFloating(field.getBoundingClientRect(), layer ? layer.getBoundingClientRect() : { left: 0, top: 0 }, window.innerHeight),
+            );
 
         place();
         window.addEventListener('scroll', place, true);
@@ -239,19 +270,19 @@ export function TagListControl(props: IProps): React.ReactElement {
             window.removeEventListener('resize', place);
         };
         // The chip count moves the field: a chip added above it pushes it down.
-    }, [wantsList, listing.chips.length]);
+    }, [wantsList, dataset.sortedRecordIds.length]);
 
-    if (listing.loading && listing.chips.length === 0) {
+    if (dataset.loading && dataset.sortedRecordIds.length === 0) {
         return <div className="TagList TagList-loading">{getString('TagList_Loading')}</div>;
     }
 
     const binding = resolved?.binding ?? null;
-    const chips = listing.chips;
+    const chips = resolveChips(dataset);
     const labels = new Set(chips.map((chip) => chip.label.toLowerCase()));
     const removable = !disabled && binding !== null && canChange(binding);
     const attachable = allowCreate && !disabled && binding !== null && canAttach(binding);
 
-    const total = listing.total;
+    const total = dataset.paging.totalResultCount;
     const visible = expanded ? chips : chips.slice(0, Math.max(0, maxVisible));
     const hiddenLoaded = chips.length - visible.length;
     const unloaded = total > chips.length ? total - chips.length : 0;
@@ -405,7 +436,7 @@ export function TagListControl(props: IProps): React.ReactElement {
                         )}
                     </li>
                 ))}
-                {!expanded && (hiddenLoaded + unloaded > 0 || (total < 0 && listing.hasNextPage)) && (
+                {!expanded && (hiddenLoaded + unloaded > 0 || (total < 0 && dataset.paging.hasNextPage)) && (
                     <li className="TagList-more-item">
                         <button type="button" className="TagList-more" onClick={() => setExpanded(true)}>
                             {total < 0
@@ -414,13 +445,15 @@ export function TagListControl(props: IProps): React.ReactElement {
                         </button>
                     </li>
                 )}
-                {expanded && listing.hasNextPage && (
+                {expanded && dataset.paging.hasNextPage && (
                     <li className="TagList-more-item">
                         <button
                             type="button"
                             className="TagList-more"
-                            disabled={listing.loading}
-                            onClick={listing.loadNextPage}
+                            disabled={dataset.loading}
+                            // Bare loadNextPage() accumulates: sortedRecordIds comes back
+                            // holding every page so far (pcf-compact-list).
+                            onClick={() => dataset.paging.loadNextPage()}
                         >
                             {getString('TagList_LoadMore')}
                         </button>
@@ -479,7 +512,7 @@ export function TagListControl(props: IProps): React.ReactElement {
                         ref={listRef}
                         hidden={!listOpen}
                         className={`TagList-options TagList-options--${placement.kind}`}
-                        style={placement.kind === 'fixed' ? placement.style : undefined}
+                        style={placement.kind === 'floating' ? placement.style : undefined}
                         id={listId}
                         role="listbox"
                         aria-label={getString('TagList_AddPlaceholder')}

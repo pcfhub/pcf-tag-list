@@ -16,17 +16,10 @@
  * the next fetch and not in the call, and rejects with an `Error` whose
  * message is one readable sentence (see `messageOf`), so the caller can put
  * it in front of the user unchanged.
- *
- * **Two sources, one surface.** With `sampleData` set (the hub's demo) every
- * method answers from a `SampleStore` instead — same rules, same refusals,
- * same `Error`s — and `listing()` hands the component the sample's chips in
- * place of the view's. The component never asks which route it is on.
  */
 
-import { Binding, canChange, resolveBinding } from './binding';
-import { listDataset, Listing } from './chips';
+import { Binding, resolveBinding } from './binding';
 import { bareId, Found, messageOf, Platform, TableInfo } from './platform';
-import { parseSampleData, SampleStore } from './sample';
 
 export interface Resolved {
     binding: Binding;
@@ -41,8 +34,6 @@ export interface ServiceInputs {
     relationshipName: string;
     /** Used only where metadata will not name the primary column. */
     primaryNameField: string;
-    /** The `sampleData` input, `''` on a real form. */
-    sampleData: string;
 }
 
 /** How many suggestions a search shows. */
@@ -54,49 +45,8 @@ export class TagService {
     /** Every tag the record is linked to under a many-to-many, read once per binding and kept current by this service's own writes. */
     private linked: { key: string; promise: Promise<Set<string> | null> } | null = null;
 
-    /** The sample route's store, kept while the text is unchanged so the demo's links survive a re-render. */
-    private sampled: { text: string; store: SampleStore | null } | null = null;
-
     /** Reads the current inputs on every call, because a context is a new object every pass. */
     constructor(private readonly read: () => ServiceInputs) {}
-
-    /**
-     * The sample route: `undefined` on a real form, `null` for a document the
-     * parser could not read, else the store.
-     */
-    private sample(): SampleStore | null | undefined {
-        const text = this.read().sampleData.trim();
-
-        if (text === '') {
-            return undefined;
-        }
-
-        if (this.sampled?.text !== text) {
-            const document = parseSampleData(text);
-
-            this.sampled = { text, store: document === null ? null : new SampleStore(document) };
-        }
-
-        return this.sampled.store;
-    }
-
-    /** Whether the control is playing against `sampleData` rather than Dataverse. */
-    isSample(): boolean {
-        return this.sample() !== undefined;
-    }
-
-    /** The chips and paging to render — the view's on a form, the sample's in the demo. */
-    listing(dataset: ComponentFramework.PropertyTypes.DataSet): Listing {
-        const store = this.sample();
-
-        if (store === undefined) {
-            return listDataset(dataset);
-        }
-
-        const chips = (store?.chips() ?? []).map((tag) => ({ id: tag.id, label: tag.name, color: tag.color }));
-
-        return { chips, total: chips.length, hasNextPage: false, loading: false, loadNextPage: () => undefined };
-    }
 
     /** The binding, resolved once per parent, target, label column and relationship name. */
     resolve(): Promise<Resolved> {
@@ -132,22 +82,11 @@ export class TagService {
         const target = dataset.getTargetEntityType();
         const labelColumn = dataset.columns.find((column) => column.alias === 'labelField')?.name ?? '';
 
-        const sample = this.read().sampleData.trim();
-
-        return { key: [platform.parent?.id ?? '', target, labelColumn, relationshipName, sample].join('|'), target, labelColumn };
+        return { key: [platform.parent?.id ?? '', target, labelColumn, relationshipName].join('|'), target, labelColumn };
     }
 
     private async resolveUncached(target: string, labelColumn: string): Promise<Resolved> {
         const { platform, relationshipName, primaryNameField } = this.read();
-        const store = this.sample();
-
-        if (store !== undefined) {
-            return {
-                binding: store?.binding ?? { kind: 'unknown', reason: 'badSample' },
-                target: { entitySet: null, primaryId: 'id', primaryName: 'name' },
-                parentSet: null,
-            };
-        }
         const parentTable = platform.parent?.table ?? null;
 
         const [manyToMany, manyToOne, targetInfo, parentInfo] = await Promise.all([
@@ -182,11 +121,6 @@ export class TagService {
         const { platform, dataset } = this.read();
         const { binding, target } = await this.resolve();
         const term = text.trim();
-        const store = this.sample();
-
-        if (store !== undefined) {
-            return store !== null && (binding.kind === 'manyToMany' || binding.kind === 'oneToMany') ? store.search(term, SUGGESTIONS) : [];
-        }
 
         if (term === '' || platform.webAPI === null || (binding.kind !== 'manyToMany' && binding.kind !== 'oneToMany')) {
             return [];
@@ -261,15 +195,6 @@ export class TagService {
 
     /** Attach an existing tag to this record. */
     async attach(tag: Found): Promise<void> {
-        const store = this.sample();
-
-        if (store !== undefined) {
-            await this.resolve();
-            await this.guarded(async () => this.sampleOnly(store).link(tag.id));
-
-            return;
-        }
-
         await this.guarded(() => this.link(tag.id));
         this.read().dataset.refresh();
     }
@@ -283,17 +208,6 @@ export class TagService {
         const { platform, dataset } = this.read();
         const { binding, target, parentSet } = await this.resolve();
         const table = dataset.getTargetEntityType();
-        const store = this.sample();
-
-        if (store !== undefined) {
-            if (binding.kind !== 'manyToMany' && binding.kind !== 'oneToMany') {
-                throw new Error('Tags cannot be created here.');
-            }
-
-            await this.guarded(async () => this.sampleOnly(store).create(name));
-
-            return;
-        }
 
         if (platform.webAPI === null || platform.parent === null) {
             throw new Error('Tags cannot be created on this host.');
@@ -330,8 +244,7 @@ export class TagService {
         const { binding } = await this.resolve();
         const table = dataset.getTargetEntityType();
 
-        // No dialog on the sample route: the demo's lookupObjects resolves `[]`, which would read as a cancel.
-        if (platform.pick === null || this.isSample() || (binding.kind !== 'manyToMany' && binding.kind !== 'oneToMany')) {
+        if (platform.pick === null || (binding.kind !== 'manyToMany' && binding.kind !== 'oneToMany')) {
             return 0;
         }
 
@@ -380,21 +293,6 @@ export class TagService {
         const { platform, dataset } = this.read();
         const { binding, parentSet } = await this.resolve();
         const tagId = bareId(id);
-        const store = this.sample();
-
-        if (store !== undefined) {
-            if (binding.kind === 'linkRows' && platform.confirm && !(await platform.confirm(confirmText.title, confirmText.text))) {
-                return false;
-            }
-
-            if (!canChange(binding)) {
-                throw new Error(`${label} cannot be removed here.`);
-            }
-
-            await this.guarded(async () => this.sampleOnly(store).unlink(id));
-
-            return true;
-        }
 
         if (binding.kind === 'manyToMany' && platform.parent) {
             await this.guarded(() => platform.reference('DELETE', `${parentSet}(${platform.parent!.id})/${binding.navigation}(${tagId})/$ref`));
@@ -443,15 +341,6 @@ export class TagService {
         } else {
             throw new Error('Tags cannot be added here.');
         }
-    }
-
-    /** The store, or the named state's sentence as a rejection — reached only past a binding that allowed the call. */
-    private sampleOnly(store: SampleStore | null): SampleStore {
-        if (store === null) {
-            throw new Error('The sample data could not be read.');
-        }
-
-        return store;
     }
 
     /** Run a platform call and turn whatever it rejects with into an `Error` carrying one sentence. */

@@ -49,11 +49,7 @@ export type Binding =
     /** More than one relationship could be this subgrid's; `candidates` are their SchemaNames. */
     | { kind: 'ambiguous'; candidates: string[] }
     /** Tags can be shown but not changed, and `reason` says why. */
-    | {
-          kind: 'unknown';
-          /** `badSample` is the demo's: a `sampleData` the parser could not read (sample.ts). */
-          reason: 'noParent' | 'noMetadata' | 'noRelationship' | 'unmatchedName' | 'selfReferential' | 'badSample';
-      };
+    | { kind: 'unknown'; reason: 'noParent' | 'noMetadata' | 'noRelationship' | 'unmatchedName' | 'selfReferential' };
 
 export interface BindingInput {
     /** The form's table, from `contextInfo`; `null` off a form record (canvas, the demo, an unsaved record). */

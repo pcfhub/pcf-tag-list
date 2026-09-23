@@ -32,8 +32,6 @@ export class TagList implements ComponentFramework.ReactControl<IInputs, IOutput
             dataset: this.context.parameters.tags,
             relationshipName: (this.context.parameters.relationshipName?.raw ?? '').trim(),
             primaryNameField: (this.context.parameters.primaryNameField.raw ?? '').trim(),
-            // Blank on every real form; the hub's demo presets fill it (sample.ts).
-            sampleData: this.context.parameters.sampleData?.raw ?? '',
         }));
     }
 
@@ -50,25 +48,17 @@ export class TagList implements ComponentFramework.ReactControl<IInputs, IOutput
             allowNewTags: context.parameters.allowNewTags?.raw !== false,
             maxVisible: context.parameters.maxVisible.raw ?? 12,
             disabled: context.mode.isControlDisabled,
-            canBrowse: platform.pick !== null && !this.service.isSample(),
+            canBrowse: platform.pick !== null,
             dark: (context as { fluentDesignLanguage?: { isDarkTheme?: boolean } }).fluentDesignLanguage?.isDarkTheme,
             getString: (id: string): string => context.resources.getString(id),
             onOpenTag: (recordId: string): void => {
                 this.selectedTagId = recordId;
                 this.notifyOutputChanged();
-
-                // A sample chip is not a row of the view, so there is nothing to open.
-                if (!this.service.isSample() && dataset.records[recordId]) {
-                    dataset.openDatasetItem(dataset.records[recordId].getNamedReference());
-                }
+                dataset.openDatasetItem(dataset.records[recordId].getNamedReference());
             },
         };
 
-        // Keyed by the sample document: the hub switches presets on a mounted
-        // control, and a new document is a new record — the last preset's error
-        // line, typed text and expanded list must not carry over (seen in the
-        // hub's harness, 2026-09-23). Blank on a form, so the key never moves there.
-        return React.createElement(TagListControl, { ...props, key: (context.parameters.sampleData?.raw ?? '').trim() });
+        return React.createElement(TagListControl, props);
     }
 
     public getOutputs(): IOutputs {

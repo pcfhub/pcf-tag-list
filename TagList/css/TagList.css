@@ -267,15 +267,19 @@
 
 /*
  * The list is lifted into a layer at the end of <body> (placement.ts), which
- * carries this control's root class so these rules still match, and is placed
- * fixed against the field — like the platform's own lookup flyout. *pending*
- * is the one frame before it is measured. Absolute (0.3.0) was clipped on a
- * real form; fixed inside the form (0.3.1) was trapped and fell back to
- * pushing the section open.
+ * carries this control's root class so these rules still match, and the list
+ * is placed against the field — like the platform's own lookup flyout.
+ * *pending* is the one frame before it is measured. Absolute inside the form
+ * (0.3.0) was clipped on a real form; fixed inside the form (0.3.1) was
+ * trapped and fell back to pushing the section open. The layer is absolute at
+ * the page's origin so the list, absolute within it, grows a host sized to its
+ * content (0.5.0; placement.ts).
  */
 .TagList.TagList-layer {
     display: block;
-    position: static;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 0;
     height: 0;
     gap: 0;

@@ -55,18 +55,3 @@ control lists the candidates when it is.
 
 `parentLookupField` is no longer read as of 0.3.0; see
 [Migration](migration.md).
-
-`sampleData` exists for the demo on this page, and should be left blank on a
-form, where it changes nothing. Set, it holds a JSON tag table the control
-plays against instead of Dataverse:
-
-```json
-{
-  "binding": "manyToMany",
-  "tags": [{ "id": "t1", "name": "Priority", "color": "#DC2626" }],
-  "linked": ["t1"]
-}
-```
-
-A document the control cannot read shows "The sample data could not be read"
-rather than a blank control.

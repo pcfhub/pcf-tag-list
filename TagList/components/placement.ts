@@ -31,24 +31,30 @@
  *     properties onto it on every open.
  */
 
-export interface FixedPlacement {
-    kind: 'fixed';
+export interface FloatingPlacement {
+    kind: 'floating';
     style: {
-        position: 'fixed';
+        position: 'absolute';
         left: number;
         width: number;
-        top?: number;
-        bottom?: number;
+        top: number;
         maxHeight: number;
+        transform?: string;
     };
 }
 
-export type Placement = { kind: 'pending' } | FixedPlacement;
+export type Placement = { kind: 'pending' } | FloatingPlacement;
 
 /** The list's own ceiling, as in the stylesheet. */
 const MAX_HEIGHT = 264;
 
-/** Below this much room under the field, and with more above it, the list opens upward. */
+/**
+ * The list opens upward only when there is less than this under the field
+ * *and* at least this above it. The second half is 0.5.0's: 0.3.2 flipped
+ * whenever above beat below, and in the hub's demo — a frame sized to the
+ * control, so there is never room below — a one-line list flipped up over
+ * the chips (2026-09-23).
+ */
 const FLIP_BELOW = 160;
 
 /** The control's custom properties the list reads, copied onto the layer so it keeps the host's theme. */
@@ -64,18 +70,41 @@ const THEMED = [
     '--TagList-line-height',
 ];
 
-/** The fixed placement for a field's box in a viewport of the given height. */
-export function placeFixed(field: { left: number; top: number; bottom: number; width: number }, viewportHeight: number): FixedPlacement {
+type Box = { left: number; top: number; bottom: number; width: number };
+
+/**
+ * Where the list goes, for the field's box and the layer's, both in viewport
+ * coordinates (`getBoundingClientRect`).
+ *
+ * **Absolute against the layer, not fixed** (0.5.0). On a form the two look
+ * the same: the layer is at the end of `<body>`, outside every clipping and
+ * trapping ancestor either way, and the list follows the field on scroll. The
+ * difference is a host that sizes itself to its content. The hub's demo frame
+ * grows to fit an absolutely positioned overlay and deliberately skips a fixed
+ * one (its measure-height.ts: a fixed box follows the frame's own height, so
+ * measuring it would feed back into the resize), and 0.3.2's fixed list was
+ * cut off at the frame's edge.
+ */
+export function placeFloating(field: Box, layer: { left: number; top: number }, viewportHeight: number): FloatingPlacement {
     const below = viewportHeight - field.bottom;
     const above = field.top;
-    const upward = below < FLIP_BELOW && above > below;
-    const room = Math.max(96, Math.min(MAX_HEIGHT, (upward ? above : below) - 8));
+    const upward = below < FLIP_BELOW && above >= FLIP_BELOW && above > below;
+    const left = field.left - layer.left;
 
     return {
-        kind: 'fixed',
+        kind: 'floating',
         style: upward
-            ? { position: 'fixed', left: field.left, width: field.width, bottom: viewportHeight - field.top + 2, maxHeight: room }
-            : { position: 'fixed', left: field.left, width: field.width, top: field.bottom + 2, maxHeight: room },
+            ? {
+                  position: 'absolute',
+                  left,
+                  width: field.width,
+                  top: field.top - layer.top - 2,
+                  transform: 'translateY(-100%)',
+                  maxHeight: Math.min(MAX_HEIGHT, above - 8),
+              }
+            : // Downward the ceiling is the stylesheet's own: where the page
+              // can grow, the list makes room for itself.
+              { position: 'absolute', left, width: field.width, top: field.bottom - layer.top + 2, maxHeight: MAX_HEIGHT },
     };
 }
 

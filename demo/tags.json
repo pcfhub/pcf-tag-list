@@ -1,17 +1,18 @@
 {
-    "targetEntityType": "tag",
+    "targetEntityType": "cll_tag",
     "title": "Tags",
     "columns": [
         {
-            "name": "cr123_tagname",
+            "name": "cll_tagname",
             "displayName": "Name",
             "dataType": "SingleLine.Text",
             "alias": "labelField",
             "order": 0,
-            "visualSizeFactor": 150
+            "visualSizeFactor": 150,
+            "isPrimary": true
         },
         {
-            "name": "cr123_tagcolor",
+            "name": "cll_tagcolour",
             "displayName": "Colour",
             "dataType": "SingleLine.Text",
             "alias": "colorField",
@@ -20,11 +21,237 @@
         }
     ],
     "records": [
-        { "id": "1", "values": { "cr123_tagname": "Feature", "cr123_tagcolor": "#7C3AED" } },
-        { "id": "2", "values": { "cr123_tagname": "Bug", "cr123_tagcolor": "#DC2626" } },
-        { "id": "3", "values": { "cr123_tagname": "Enhancement", "cr123_tagcolor": "#2563EB" } },
-        { "id": "4", "values": { "cr123_tagname": "Documentation", "cr123_tagcolor": "#059669" } },
-        { "id": "5", "values": { "cr123_tagname": "Needs triage", "cr123_tagcolor": "#D97706" } },
-        { "id": "6", "values": { "cr123_tagname": "Won't fix", "cr123_tagcolor": "#6B7280" } }
-    ]
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000001",
+            "values": {
+                "cll_tagname": "Priority",
+                "cll_tagcolour": "#DC2626"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000002",
+            "values": {
+                "cll_tagname": "Enterprise",
+                "cll_tagcolour": "#2563EB"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000003",
+            "values": {
+                "cll_tagname": "Renewal due",
+                "cll_tagcolour": "#D97706"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000004",
+            "values": {
+                "cll_tagname": "Partner",
+                "cll_tagcolour": "#059669"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000005",
+            "values": {
+                "cll_tagname": "Referral",
+                "cll_tagcolour": "#7C3AED"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000006",
+            "values": {
+                "cll_tagname": "Public sector",
+                "cll_tagcolour": "#0891B2"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000007",
+            "values": {
+                "cll_tagname": "Key account",
+                "cll_tagcolour": "#BE185D"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000008",
+            "values": {
+                "cll_tagname": "Upsell",
+                "cll_tagcolour": "#65A30D"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000009",
+            "values": {
+                "cll_tagname": "Churn risk",
+                "cll_tagcolour": "#B91C1C"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000010",
+            "values": {
+                "cll_tagname": "Onboarding",
+                "cll_tagcolour": "#4F46E5"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000011",
+            "values": {
+                "cll_tagname": "Pilot",
+                "cll_tagcolour": "#0D9488"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000012",
+            "values": {
+                "cll_tagname": "Healthcare",
+                "cll_tagcolour": "#9333EA"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000013",
+            "values": {
+                "cll_tagname": "Manufacturing",
+                "cll_tagcolour": "#475569"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000014",
+            "values": {
+                "cll_tagname": "Retail",
+                "cll_tagcolour": "#EA580C"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000015",
+            "values": {
+                "cll_tagname": "Finance",
+                "cll_tagcolour": "#1D4ED8"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000016",
+            "values": {
+                "cll_tagname": "Education",
+                "cll_tagcolour": "#16A34A"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000017",
+            "values": {
+                "cll_tagname": "Nonprofit",
+                "cll_tagcolour": "#A16207"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000018",
+            "values": {
+                "cll_tagname": "EMEA",
+                "cll_tagcolour": "#0369A1"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000019",
+            "values": {
+                "cll_tagname": "APAC",
+                "cll_tagcolour": "#C026D3"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000020",
+            "values": {
+                "cll_tagname": "Americas",
+                "cll_tagcolour": "#CA8A04"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000021",
+            "values": {
+                "cll_tagname": "Event lead",
+                "cll_tagcolour": "#DB2777"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000022",
+            "values": {
+                "cll_tagname": "Newsletter",
+                "cll_tagcolour": "#6B7280"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000023",
+            "values": {
+                "cll_tagname": "Strategic",
+                "cll_tagcolour": "#7C2D12"
+            }
+        },
+        {
+            "id": "7a9d0000-0000-4000-8000-000000000024",
+            "values": {
+                "cll_tagname": "Pricing exception",
+                "cll_tagcolour": "#B45309"
+            }
+        }
+    ],
+    "dataverse": {
+        "record": {
+            "entityType": "account",
+            "id": "5c1b7e2a-3f4d-4e8a-9b6c-0d2e4f6a8b10",
+            "name": "Adventure Works"
+        },
+        "tables": {
+            "account": {
+                "entitySet": "accounts",
+                "primaryId": "accountid",
+                "primaryName": "name"
+            },
+            "cll_tag": {
+                "entitySet": "cll_tags",
+                "primaryId": "cll_tagid",
+                "primaryName": "cll_tagname"
+            }
+        },
+        "relationships": [
+            {
+                "kind": "manyToMany",
+                "schemaName": "cll_Account_cll_Tag_cll_Tag",
+                "entity1": "account",
+                "entity2": "cll_tag",
+                "entity1NavigationProperty": "cll_Account_cll_Tag_cll_Tag",
+                "entity2NavigationProperty": "cll_Account_cll_Tag_cll_Tag",
+                "links": [
+                    [
+                        "5c1b7e2a-3f4d-4e8a-9b6c-0d2e4f6a8b10",
+                        "7a9d0000-0000-4000-8000-000000000001"
+                    ],
+                    [
+                        "5c1b7e2a-3f4d-4e8a-9b6c-0d2e4f6a8b10",
+                        "7a9d0000-0000-4000-8000-000000000002"
+                    ],
+                    [
+                        "5c1b7e2a-3f4d-4e8a-9b6c-0d2e4f6a8b10",
+                        "7a9d0000-0000-4000-8000-000000000003"
+                    ],
+                    [
+                        "5c1b7e2a-3f4d-4e8a-9b6c-0d2e4f6a8b10",
+                        "7a9d0000-0000-4000-8000-000000000004"
+                    ],
+                    [
+                        "5c1b7e2a-3f4d-4e8a-9b6c-0d2e4f6a8b10",
+                        "7a9d0000-0000-4000-8000-000000000018"
+                    ],
+                    [
+                        "5c1b7e2a-3f4d-4e8a-9b6c-0d2e4f6a8b10",
+                        "7a9d0000-0000-4000-8000-000000000007"
+                    ]
+                ]
+            },
+            {
+                "kind": "oneToMany",
+                "schemaName": "cll_account_cll_tag",
+                "referencedEntity": "account",
+                "referencingEntity": "cll_tag",
+                "referencingAttribute": "cll_account",
+                "referencingNavigationProperty": "cll_account"
+            }
+        ],
+        "subgrid": "cll_Account_cll_Tag_cll_Tag"
+    }
 }

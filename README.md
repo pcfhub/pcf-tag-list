@@ -55,11 +55,11 @@ English, Spanish, French, German and Japanese.
 
 ## On the hub
 
-The demo runs at **mocked** fidelity. It has no Dataverse behind it, so each
-preset carries a small tag table in the `sampleData` input and the control
-searches, links, creates and unlinks against that: the same code a form runs,
-with a different source. Browse needs a model-driven app and is not offered
-there. `sampleData` is for the demo only; leave it blank on a form.
+The demo runs at **mocked** fidelity. `demo/tags.json` carries a small stand-in
+Dataverse beside the rows (an account, a tag table, the relationships between
+them and which tags are linked), and the hub's harness answers the control's
+metadata reads, searches, `$ref` links and lookup dialog from it. The control
+runs the same code it runs on a form; it has no demo-only property.
 
 ## Install
 

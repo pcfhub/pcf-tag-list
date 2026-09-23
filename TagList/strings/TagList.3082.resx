@@ -203,13 +203,4 @@
   <data name="TagList_ConfirmText" xml:space="preserve">
     <value>¿Quitar {0} de este registro? Se elimina la fila de vínculo; la etiqueta se conserva.</value>
   </data>
-  <data name="SampleData_Name" xml:space="preserve">
-    <value>Datos de ejemplo (solo demostración)</value>
-  </data>
-  <data name="SampleData_Desc" xml:space="preserve">
-    <value>Un documento JSON de etiquetas que el control muestra en lugar de las del registro. Déjelo en blanco en un formulario real.</value>
-  </data>
-  <data name="TagList_NoticeSample" xml:space="preserve">
-    <value>No se pudieron leer los datos de ejemplo, por lo que no se muestra ninguna etiqueta.</value>
-  </data>
 </root>
