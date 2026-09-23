@@ -265,12 +265,15 @@
 
 /* ---- suggestions ------------------------------------------------------- */
 
+/*
+ * Three placements, chosen in placement.ts against the page: *fixed* against
+ * the field (the usual one — it escapes a form section's overflow and paints
+ * over the next section), *inline* in the flow when an ancestor would trap a
+ * fixed element, and *pending* for the one frame before it is measured. 0.3.0
+ * shipped absolute-only, and on a real form the list was clipped out of sight.
+ */
 .TagList .TagList-options {
-    position: absolute;
-    z-index: 1;
-    top: calc(100% + 2px);
-    right: 0;
-    left: 0;
+    z-index: 1000;
     max-height: 264px;
     overflow-y: auto;
     margin: 0;
@@ -279,6 +282,19 @@
     border-radius: var(--TagList-radius);
     background-color: var(--TagList-background);
     box-shadow: var(--TagList-shadow);
+}
+
+.TagList .TagList-options--pending {
+    position: absolute;
+    top: calc(100% + 2px);
+    right: 0;
+    left: 0;
+    visibility: hidden;
+}
+
+.TagList .TagList-options--inline {
+    position: static;
+    margin-top: 2px;
 }
 
 .TagList .TagList-option,

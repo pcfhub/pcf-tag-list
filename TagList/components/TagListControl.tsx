@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Binding, canAttach, canChange } from '../binding';
 import { Found } from '../platform';
 import { Resolved, TagService } from '../service';
+import { Placement, placeFixed, trapsFixed } from './placement';
 
 export interface IProps {
     dataset: ComponentFramework.PropertyTypes.DataSet;
@@ -101,6 +102,9 @@ export function TagListControl(props: IProps): React.ReactElement {
     const idBase = React.useRef(`TagList-${(instances += 1)}`).current;
     const mounted = React.useRef(true);
     const searchSeq = React.useRef(0);
+    const fieldRef = React.useRef<HTMLDivElement>(null);
+    const [placement, setPlacement] = React.useState<Placement>({ kind: 'pending' });
+    const wantsList = open && text.trim() !== '';
 
     React.useEffect(
         () => () => {
@@ -158,6 +162,39 @@ export function TagListControl(props: IProps): React.ReactElement {
         return () => clearTimeout(timer);
     }, [text, service]);
 
+    /*
+     * Place the list against the page it is on, and keep it there while it is
+     * open — a fixed list does not move with the form when it scrolls, so it
+     * follows the field instead. See placement.ts for why not absolute.
+     */
+    React.useEffect(() => {
+        const field = fieldRef.current;
+
+        if (!wantsList || !field) {
+            setPlacement({ kind: 'pending' });
+
+            return undefined;
+        }
+
+        if (trapsFixed(field)) {
+            setPlacement({ kind: 'inline' });
+
+            return undefined;
+        }
+
+        const place = (): void => setPlacement(placeFixed(field.getBoundingClientRect(), window.innerHeight));
+
+        place();
+        window.addEventListener('scroll', place, true);
+        window.addEventListener('resize', place);
+
+        return () => {
+            window.removeEventListener('scroll', place, true);
+            window.removeEventListener('resize', place);
+        };
+        // The chip count moves the field: a chip added above it pushes it down.
+    }, [wantsList, dataset.sortedRecordIds.length]);
+
     if (dataset.loading && dataset.sortedRecordIds.length === 0) {
         return <div className="TagList TagList-loading">{getString('TagList_Loading')}</div>;
     }
@@ -186,7 +223,7 @@ export function TagListControl(props: IProps): React.ReactElement {
         options.push({ kind: 'create', name: term });
     }
 
-    const listOpen = open && term !== '';
+    const listOpen = wantsList;
 
     const report = (key: string, name: string) => (reason: Error) => {
         if (mounted.current) {
@@ -334,7 +371,7 @@ export function TagListControl(props: IProps): React.ReactElement {
 
             {attachable && (
                 <div className="TagList-add">
-                    <div className={`TagList-field${adding ? ' TagList-field--busy' : ''}`}>
+                    <div ref={fieldRef} className={`TagList-field${adding ? ' TagList-field--busy' : ''}`}>
                         <input
                             type="text"
                             className="TagList-input"
@@ -371,7 +408,13 @@ export function TagListControl(props: IProps): React.ReactElement {
                         )}
                     </div>
                     {listOpen && (
-                        <ul className="TagList-options" id={listId} role="listbox" aria-label={getString('TagList_AddPlaceholder')}>
+                        <ul
+                            className={`TagList-options TagList-options--${placement.kind}`}
+                            style={placement.kind === 'fixed' ? placement.style : undefined}
+                            id={listId}
+                            role="listbox"
+                            aria-label={getString('TagList_AddPlaceholder')}
+                        >
                             {searching && <li className="TagList-hint">{getString('TagList_Searching')}</li>}
                             {!searching && options.length === 0 && <li className="TagList-hint">{getString('TagList_NoMatches')}</li>}
                             {options.map((option, index) => (

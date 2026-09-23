@@ -91,6 +91,31 @@ writes, and falls back to the loaded chips if the read fails. The suite asserts
 it now (and was mutation-tested against it); it did not before the harness
 showed it.
 
+## What the form found that the harness did not (0.3.0 → 0.3.1)
+
+On the Account form, 2026-09-23: typing sent the searches (200, debounced) and
+**no list appeared** — not even "Searching…". The list was `position: absolute`
+under the field, and the subgrid's section ends at the field, so an ancestor
+clipped it or the next section painted over it. The harness had no such
+ancestor. The skill had said an inline popup is "not a risk worth taking blind"
+on a form section, and 0.3.0 took it blind.
+
+A portal is the usual fix and is not available: ReactDOM is an external only
+behind pcf-scripts' `pcfReactPlatformLibraries` flag
+(`platformLibrariesHandler.js`), and bundling a second copy is what the
+platform library exists to avoid. `components/placement.ts` instead places the
+list `position: fixed` against the field's box (flipping above it when there is
+more room there, and following it on scroll and resize), and in the flow when an
+ancestor has a `transform`, `filter`, `perspective` or `contain` that would
+trap a fixed element.
+
+`dev/harness.html` now has both conditions as switches, on by default for the
+clip. With the clip on, the 0.3.0 list is invisible at its own centre point
+(`elementFromPoint`) and the 0.3.1 list is visible and clickable; with a
+transformed ancestor the list goes inline and is visible. The suite cannot see
+any of it — it renders without layout — so this is a harness check, not an
+assertion.
+
 ## Design decisions worth keeping
 
 - **`allowCreate` kept its 0.2.x meaning** (false hides the add box, the
@@ -123,6 +148,9 @@ showed it.
   after `pcf-compact-list`, which also has not seen it on a form).
 - **The stylesheet on a real form**, including the dark theme and forced
   colours. Checked in `dev/harness.html` with `getComputedStyle` only.
+- **The fixed list on the real form** (0.3.1). Whether the Account form has
+  an ancestor that traps a fixed element — the list would then go inline, which
+  the section may still clip. If it does not appear, that is the case to report.
 
 ## Screenshots
 

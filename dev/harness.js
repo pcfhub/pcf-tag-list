@@ -152,6 +152,21 @@
             instance.destroy();
         }
 
+        /*
+         * The form section a subgrid sits in, as far as a list below the field
+         * is concerned: 0.3.0's absolutely positioned list was clipped out of
+         * sight on a real Account form, and this page — no overflow, no
+         * transform — showed it fine. Both switches reproduce what the page
+         * could not.
+         */
+        var surface = document.getElementById('harness-surface');
+        var clip = document.getElementById('harness-clip').checked;
+        var trap = document.getElementById('harness-trap').checked;
+
+        surface.style.overflow = clip ? 'hidden' : '';
+        surface.style.maxHeight = clip ? '150px' : '';
+        surface.style.transform = trap ? 'translateZ(0)' : '';
+
         handle = host.createHost(fixture, options());
         container = document.getElementById('harness-root');
 
