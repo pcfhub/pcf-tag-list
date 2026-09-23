@@ -3,10 +3,10 @@
 
     "slug": "pcf-tag-list",
     "name": "Tag List",
-    "tagline": "A many-to-many tag picker rendered as removable chips, bound to a dataset.",
+    "tagline": "A multi-select lookup for model-driven forms: related records as chips, with a type-ahead to attach more.",
     "category": "data",
     "hosts": ["model-driven"],
-    "tags": ["react", "chips", "many-to-many"],
+    "tags": ["react", "chips", "many-to-many", "multi-select", "lookup"],
 
     "control": {
         "namespace": "PCFHub",
@@ -28,11 +28,15 @@
 
     "media": {
         "logo": "media/logo.png",
-        "screenshots": ["media/screenshot.png"]
+        "screenshots": ["media/screenshot.png", "media/search.png", "media/narrow.png"]
     },
 
     "demo": {
-        "fidelity": "mocked",
+        "fidelity": "limited",
+        "limitations": [
+            "No record to attach tags to: the demo shows the chips and the notice the control shows off a saved record, with no search box or remove buttons.",
+            "Search, Browse, linking and unlinking all need Dataverse and a model-driven form."
+        ],
         "bundle": "out/controls/TagList/bundle.js",
         "styles": ["out/controls/TagList/css/TagList.css"],
         "datasetFixture": "demo/tags.json",

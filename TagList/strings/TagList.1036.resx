@@ -82,10 +82,10 @@
   </data>
 
   <data name="AllowCreate_Name" xml:space="preserve">
-    <value>Autoriser la création de nouvelles étiquettes</value>
+    <value>Autoriser l'ajout d'étiquettes</value>
   </data>
   <data name="AllowCreate_Desc" xml:space="preserve">
-    <value>Affiche la zone d'ajout d'étiquette. Désactivez pour une liste de puces en lecture seule.</value>
+    <value>Affiche la zone d'ajout d'étiquettes. Désactivez-la pour une liste en lecture seule.</value>
   </data>
 
   <data name="MaxVisible_Name" xml:space="preserve">
@@ -99,14 +99,14 @@
     <value>Champ de nom principal</value>
   </data>
   <data name="PrimaryNameField_Desc" xml:space="preserve">
-    <value>Nom logique de la colonne de nom principal de l'entité d'étiquette, renseignée lors de la création d'une nouvelle étiquette. La valeur par défaut est « name ».</value>
+    <value>Utilisé uniquement si les métadonnées de la table d'étiquettes sont illisibles : sa colonne de nom principal, recherchée et renseignée à la création d'une étiquette.</value>
   </data>
 
   <data name="ParentLookupField_Name" xml:space="preserve">
     <value>Champ de recherche de l'enregistrement parent</value>
   </data>
   <data name="ParentLookupField_Desc" xml:space="preserve">
-    <value>Nom logique de la colonne de recherche de l'entité d'étiquette qui référence l'enregistrement parent (par exemple, regardingobjectid).</value>
+    <value>Plus utilisé : la recherche est trouvée dans les métadonnées. Conservé pour que les formulaires existants s'importent sans erreur.</value>
   </data>
 
   <data name="SelectedTagId_Name" xml:space="preserve">
@@ -131,7 +131,76 @@
   <data name="TagList_AddPlaceholder" xml:space="preserve">
     <value>Ajouter une étiquette…</value>
   </data>
-  <data name="TagList_AddButton" xml:space="preserve">
-    <value>Ajouter</value>
+  <data name="AllowNewTags_Name" xml:space="preserve">
+    <value>Autoriser les nouvelles étiquettes</value>
+  </data>
+  <data name="AllowNewTags_Desc" xml:space="preserve">
+    <value>Propose de créer une étiquette qui n'existe pas encore. Désactivez pour n'associer que des étiquettes existantes.</value>
+  </data>
+  <data name="RelationshipName_Name" xml:space="preserve">
+    <value>Nom de la relation</value>
+  </data>
+  <data name="RelationshipName_Desc" xml:space="preserve">
+    <value>Nécessaire uniquement si plusieurs relations relient les deux tables : la relation affichée par cette sous-grille (son nom de schéma ou une colonne de recherche). Le contrôle liste les candidates lorsque c'est nécessaire.</value>
+  </data>
+  <data name="TagList_MoreUnknown" xml:space="preserve">
+    <value>Plus…</value>
+  </data>
+  <data name="TagList_ShowFewer" xml:space="preserve">
+    <value>Afficher moins</value>
+  </data>
+  <data name="TagList_LoadMore" xml:space="preserve">
+    <value>Charger plus</value>
+  </data>
+  <data name="TagList_Browse" xml:space="preserve">
+    <value>Parcourir</value>
+  </data>
+  <data name="TagList_BrowseLabel" xml:space="preserve">
+    <value>Parcourir toutes les étiquettes</value>
+  </data>
+  <data name="TagList_CreateOption" xml:space="preserve">
+    <value>Créer « {0} »</value>
+  </data>
+  <data name="TagList_Searching" xml:space="preserve">
+    <value>Recherche…</value>
+  </data>
+  <data name="TagList_NoMatches" xml:space="preserve">
+    <value>Aucune étiquette correspondante</value>
+  </data>
+  <data name="TagList_Dismiss" xml:space="preserve">
+    <value>Ignorer</value>
+  </data>
+  <data name="TagList_ErrorAdd" xml:space="preserve">
+    <value>Impossible d'ajouter {0}. {1}</value>
+  </data>
+  <data name="TagList_ErrorRemove" xml:space="preserve">
+    <value>Impossible de retirer {0}. {1}</value>
+  </data>
+  <data name="TagList_ErrorSearch" xml:space="preserve">
+    <value>Impossible de rechercher des étiquettes. {0}</value>
+  </data>
+  <data name="TagList_NoticeAmbiguous" xml:space="preserve">
+    <value>Plusieurs relations relient ces tables. Renseignez Nom de la relation avec l'une de celles-ci : {0}.</value>
+  </data>
+  <data name="TagList_NoticeUnmatched" xml:space="preserve">
+    <value>Le nom de la relation ne correspond à aucune relation entre ces tables.</value>
+  </data>
+  <data name="TagList_NoticeNoRelationship" xml:space="preserve">
+    <value>Aucune relation ne relie ces tables : les étiquettes sont affichées mais ne peuvent pas être modifiées.</value>
+  </data>
+  <data name="TagList_NoticeNoParent" xml:space="preserve">
+    <value>Enregistrez l'enregistrement pour ajouter des étiquettes.</value>
+  </data>
+  <data name="TagList_NoticeNoMetadata" xml:space="preserve">
+    <value>Les relations des tables sont illisibles : les étiquettes sont affichées mais ne peuvent pas être modifiées.</value>
+  </data>
+  <data name="TagList_NoticeSelf" xml:space="preserve">
+    <value>Une table liée à elle-même n'est pas prise en charge : les étiquettes sont affichées mais ne peuvent pas être modifiées.</value>
+  </data>
+  <data name="TagList_ConfirmTitle" xml:space="preserve">
+    <value>Retirer l'étiquette</value>
+  </data>
+  <data name="TagList_ConfirmText" xml:space="preserve">
+    <value>Retirer {0} de cet enregistrement ? La ligne de liaison est supprimée ; l'étiquette est conservée.</value>
   </data>
 </root>

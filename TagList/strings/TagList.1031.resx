@@ -82,10 +82,10 @@
   </data>
 
   <data name="AllowCreate_Name" xml:space="preserve">
-    <value>Erstellen neuer Tags zulassen</value>
+    <value>Hinzufügen von Tags zulassen</value>
   </data>
   <data name="AllowCreate_Desc" xml:space="preserve">
-    <value>Zeigt das Feld zum Hinzufügen von Tags an. Deaktivieren für eine schreibgeschützte Chip-Liste.</value>
+    <value>Zeigt das Feld zum Hinzufügen von Tags. Deaktivieren für eine schreibgeschützte Liste.</value>
   </data>
 
   <data name="MaxVisible_Name" xml:space="preserve">
@@ -99,14 +99,14 @@
     <value>Primäres Namensfeld</value>
   </data>
   <data name="PrimaryNameField_Desc" xml:space="preserve">
-    <value>Logischer Name der primären Namensspalte der Tag-Entität, in die beim Erstellen eines neuen Tags geschrieben wird. Standardmäßig „name".</value>
+    <value>Nur verwendet, wenn die Metadaten der Tag-Tabelle nicht lesbar sind: ihre primäre Namensspalte, in der gesucht und beim Erstellen geschrieben wird.</value>
   </data>
 
   <data name="ParentLookupField_Name" xml:space="preserve">
     <value>Nachschlagefeld des übergeordneten Datensatzes</value>
   </data>
   <data name="ParentLookupField_Desc" xml:space="preserve">
-    <value>Logischer Name der Nachschlagespalte der Tag-Entität, die auf den übergeordneten Datensatz verweist (z. B. regardingobjectid).</value>
+    <value>Nicht mehr verwendet: Das Nachschlagefeld wird aus den Metadaten ermittelt. Bleibt erhalten, damit vorhandene Formulare fehlerfrei importiert werden.</value>
   </data>
 
   <data name="SelectedTagId_Name" xml:space="preserve">
@@ -131,7 +131,76 @@
   <data name="TagList_AddPlaceholder" xml:space="preserve">
     <value>Tag hinzufügen…</value>
   </data>
-  <data name="TagList_AddButton" xml:space="preserve">
-    <value>Hinzufügen</value>
+  <data name="AllowNewTags_Name" xml:space="preserve">
+    <value>Neue Tags zulassen</value>
+  </data>
+  <data name="AllowNewTags_Desc" xml:space="preserve">
+    <value>Bietet an, ein noch nicht vorhandenes Tag zu erstellen. Deaktivieren, um nur vorhandene Tags zuzuordnen.</value>
+  </data>
+  <data name="RelationshipName_Name" xml:space="preserve">
+    <value>Beziehungsname</value>
+  </data>
+  <data name="RelationshipName_Desc" xml:space="preserve">
+    <value>Nur nötig, wenn mehrere Beziehungen die beiden Tabellen verbinden: die Beziehung, die dieses Unterraster zeigt (Schemaname oder Nachschlagespalte). Das Steuerelement listet die Kandidaten auf, wenn es nötig ist.</value>
+  </data>
+  <data name="TagList_MoreUnknown" xml:space="preserve">
+    <value>Mehr…</value>
+  </data>
+  <data name="TagList_ShowFewer" xml:space="preserve">
+    <value>Weniger anzeigen</value>
+  </data>
+  <data name="TagList_LoadMore" xml:space="preserve">
+    <value>Mehr laden</value>
+  </data>
+  <data name="TagList_Browse" xml:space="preserve">
+    <value>Durchsuchen</value>
+  </data>
+  <data name="TagList_BrowseLabel" xml:space="preserve">
+    <value>Alle Tags durchsuchen</value>
+  </data>
+  <data name="TagList_CreateOption" xml:space="preserve">
+    <value>„{0}“ erstellen</value>
+  </data>
+  <data name="TagList_Searching" xml:space="preserve">
+    <value>Suche läuft…</value>
+  </data>
+  <data name="TagList_NoMatches" xml:space="preserve">
+    <value>Keine passenden Tags</value>
+  </data>
+  <data name="TagList_Dismiss" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="TagList_ErrorAdd" xml:space="preserve">
+    <value>{0} konnte nicht hinzugefügt werden. {1}</value>
+  </data>
+  <data name="TagList_ErrorRemove" xml:space="preserve">
+    <value>{0} konnte nicht entfernt werden. {1}</value>
+  </data>
+  <data name="TagList_ErrorSearch" xml:space="preserve">
+    <value>Tags konnten nicht gesucht werden. {0}</value>
+  </data>
+  <data name="TagList_NoticeAmbiguous" xml:space="preserve">
+    <value>Mehrere Beziehungen verbinden diese Tabellen. Setzen Sie Beziehungsname auf eine davon: {0}.</value>
+  </data>
+  <data name="TagList_NoticeUnmatched" xml:space="preserve">
+    <value>Der Beziehungsname passt zu keiner Beziehung zwischen diesen Tabellen.</value>
+  </data>
+  <data name="TagList_NoticeNoRelationship" xml:space="preserve">
+    <value>Keine Beziehung verbindet diese Tabellen, daher können Tags angezeigt, aber nicht geändert werden.</value>
+  </data>
+  <data name="TagList_NoticeNoParent" xml:space="preserve">
+    <value>Speichern Sie den Datensatz, um Tags hinzuzufügen.</value>
+  </data>
+  <data name="TagList_NoticeNoMetadata" xml:space="preserve">
+    <value>Die Beziehungen der Tabellen konnten nicht gelesen werden, daher können Tags angezeigt, aber nicht geändert werden.</value>
+  </data>
+  <data name="TagList_NoticeSelf" xml:space="preserve">
+    <value>Eine mit sich selbst verknüpfte Tabelle wird nicht unterstützt, daher können Tags angezeigt, aber nicht geändert werden.</value>
+  </data>
+  <data name="TagList_ConfirmTitle" xml:space="preserve">
+    <value>Tag entfernen</value>
+  </data>
+  <data name="TagList_ConfirmText" xml:space="preserve">
+    <value>{0} aus diesem Datensatz entfernen? Die Verknüpfungszeile wird gelöscht; das Tag selbst bleibt erhalten.</value>
   </data>
 </root>

@@ -6,33 +6,52 @@ order: 8
 
 # FAQ
 
-## Why does the control not appear in the component list?
+## Does removing a tag delete it?
 
-Most often the subgrid hasn't had its control swapped from the default grid
-— adding the control to the form doesn't do this automatically. Open the
-subgrid's properties → **Controls** → **Add control** and choose **Tag
-List** explicitly, then enable it for the client types you need. See
-[Model-driven apps](model-driven.md).
+No. Under a many-to-many it unlinks the tag from this record; the tag stays,
+and so does every other record's link to it. Under a one-to-many it clears the
+tag's lookup. The one case that deletes anything is a subgrid over a junction
+table's own view, where the row *is* the link, and that asks first.
 
-## Does it work offline / on mobile / in a phone layout?
+0.2.x did delete the tag on a many-to-many subgrid. If you used it that way,
+see [Migration](migration.md).
 
-Web, phone and tablet are all supported layouts for the control itself, but
-there's no offline story — adding and removing a tag both call
-`context.webAPI` directly against Dataverse, so both require connectivity.
-See [Limitations](limitations.md).
+## The control says "More than one relationship joins these tables"
 
-## Why doesn't removing a tag work the way I expected?
+Your two tables are joined by more than one relationship, often a many-to-many
+and a lookup, and nothing a subgrid hands to a control says which one it shows.
+Copy the name the message gives for your subgrid's relationship into
+**Relationship name**. See [Model-driven apps](model-driven.md).
 
-Almost certainly the subgrid's view is bound to the relationship's virtual
-view rather than the join/intersect entity's own view — read
-[Limitations](limitations.md) before assuming this is a bug.
+## A tag I know exists does not appear in the suggestions
 
-## Can I search for an existing tag instead of always creating a new one?
+Four reasons, in the order they usually turn out to be:
 
-Not currently — the add box always creates a new record. See
-[Limitations](limitations.md).
+- **It is already on this record.** Suggestions leave those out.
+- **Under a one-to-many, another record owns it.** Attaching would move it, so
+  it is not offered.
+- **Its name does not contain what you typed.** The search matches anywhere in
+  the name and ignores case, but it searches the name only.
+- **You cannot read it.** Suggestions come from the server as you, so your
+  security roles apply.
+
+## Why does Browse show a different list from the search?
+
+Browse is the platform's own lookup dialog, so it uses the table's lookup view
+and its filters. The search box searches the primary name directly.
+
+## Does it work offline?
+
+No. Every change is a request to Dataverse as it happens.
+
+## The control does not appear in the component list
+
+The subgrid has to be switched to Tag List explicitly: subgrid properties →
+**Components** → **Add component** → **Tag List**, then turn it on for the
+client types you need.
 
 ## How do I report a bug?
 
 Open an issue at <https://github.com/pcfhub/pcf-tag-list/issues>, with the
-platform version and the control version from the solution.
+control version from the solution and what the message under the control said,
+if it said anything.

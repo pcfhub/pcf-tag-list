@@ -82,10 +82,10 @@
   </data>
 
   <data name="AllowCreate_Name" xml:space="preserve">
-    <value>新しいタグの作成を許可する</value>
+    <value>タグの追加を許可する</value>
   </data>
   <data name="AllowCreate_Desc" xml:space="preserve">
-    <value>タグ追加ボックスを表示します。読み取り専用のチップ一覧にする場合はオフにします。</value>
+    <value>タグを追加するボックスを表示します。読み取り専用の一覧にする場合はオフにします。</value>
   </data>
 
   <data name="MaxVisible_Name" xml:space="preserve">
@@ -99,14 +99,14 @@
     <value>主要名前フィールド</value>
   </data>
   <data name="PrimaryNameField_Desc" xml:space="preserve">
-    <value>新しいタグの作成時に書き込まれる、タグ エンティティの主要名前列の論理名です。既定値は "name" です。</value>
+    <value>タグ テーブルのメタデータを読み取れない場合にのみ使用します。タグの作成時に検索および書き込みされる主名列です。</value>
   </data>
 
   <data name="ParentLookupField_Name" xml:space="preserve">
     <value>親レコードの参照フィールド</value>
   </data>
   <data name="ParentLookupField_Desc" xml:space="preserve">
-    <value>親レコードを参照する、タグ エンティティの参照列の論理名です (例: regardingobjectid)。</value>
+    <value>使用されなくなりました。検索列はメタデータから取得されます。既存のフォームを問題なくインポートするために残しています。</value>
   </data>
 
   <data name="SelectedTagId_Name" xml:space="preserve">
@@ -131,7 +131,76 @@
   <data name="TagList_AddPlaceholder" xml:space="preserve">
     <value>タグを追加…</value>
   </data>
-  <data name="TagList_AddButton" xml:space="preserve">
-    <value>追加</value>
+  <data name="AllowNewTags_Name" xml:space="preserve">
+    <value>新しいタグを許可する</value>
+  </data>
+  <data name="AllowNewTags_Desc" xml:space="preserve">
+    <value>まだ存在しないタグの作成を提案します。既存のタグのみを追加する場合はオフにします。</value>
+  </data>
+  <data name="RelationshipName_Name" xml:space="preserve">
+    <value>リレーションシップ名</value>
+  </data>
+  <data name="RelationshipName_Desc" xml:space="preserve">
+    <value>2 つのテーブルを結ぶリレーションシップが複数ある場合にのみ必要です。このサブグリッドが表示するリレーションシップ (スキーマ名または検索列)。必要な場合はコントロールが候補を表示します。</value>
+  </data>
+  <data name="TagList_MoreUnknown" xml:space="preserve">
+    <value>さらに表示…</value>
+  </data>
+  <data name="TagList_ShowFewer" xml:space="preserve">
+    <value>表示を減らす</value>
+  </data>
+  <data name="TagList_LoadMore" xml:space="preserve">
+    <value>さらに読み込む</value>
+  </data>
+  <data name="TagList_Browse" xml:space="preserve">
+    <value>参照</value>
+  </data>
+  <data name="TagList_BrowseLabel" xml:space="preserve">
+    <value>すべてのタグを参照</value>
+  </data>
+  <data name="TagList_CreateOption" xml:space="preserve">
+    <value>「{0}」を作成</value>
+  </data>
+  <data name="TagList_Searching" xml:space="preserve">
+    <value>検索しています…</value>
+  </data>
+  <data name="TagList_NoMatches" xml:space="preserve">
+    <value>一致するタグはありません</value>
+  </data>
+  <data name="TagList_Dismiss" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="TagList_ErrorAdd" xml:space="preserve">
+    <value>{0} を追加できませんでした。{1}</value>
+  </data>
+  <data name="TagList_ErrorRemove" xml:space="preserve">
+    <value>{0} を削除できませんでした。{1}</value>
+  </data>
+  <data name="TagList_ErrorSearch" xml:space="preserve">
+    <value>タグを検索できませんでした。{0}</value>
+  </data>
+  <data name="TagList_NoticeAmbiguous" xml:space="preserve">
+    <value>これらのテーブルを結ぶリレーションシップが複数あります。リレーションシップ名を次のいずれかに設定してください: {0}。</value>
+  </data>
+  <data name="TagList_NoticeUnmatched" xml:space="preserve">
+    <value>リレーションシップ名がこれらのテーブル間のリレーションシップと一致しません。</value>
+  </data>
+  <data name="TagList_NoticeNoRelationship" xml:space="preserve">
+    <value>これらのテーブルを結ぶリレーションシップがないため、タグは表示のみで変更できません。</value>
+  </data>
+  <data name="TagList_NoticeNoParent" xml:space="preserve">
+    <value>タグを追加するにはレコードを保存してください。</value>
+  </data>
+  <data name="TagList_NoticeNoMetadata" xml:space="preserve">
+    <value>テーブルのリレーションシップを読み取れなかったため、タグは表示のみで変更できません。</value>
+  </data>
+  <data name="TagList_NoticeSelf" xml:space="preserve">
+    <value>自己参照のテーブルはサポートされていないため、タグは表示のみで変更できません。</value>
+  </data>
+  <data name="TagList_ConfirmTitle" xml:space="preserve">
+    <value>タグを削除</value>
+  </data>
+  <data name="TagList_ConfirmText" xml:space="preserve">
+    <value>このレコードから {0} を削除しますか? リンク行は削除されますが、タグ自体は残ります。</value>
   </data>
 </root>

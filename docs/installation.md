@@ -16,7 +16,6 @@ order: 2
 1. Download the **managed** solution for your environment.
 2. In the Power Platform admin centre, import the solution.
 3. Publish all customizations.
-4. Enable **Code components for canvas apps** if this control is used there.
 :::
 
 :::callout{type=warning}
@@ -25,11 +24,13 @@ development environment where you intend to change the control itself — it
 cannot be cleanly uninstalled.
 :::
 
+The import asks for the **Web API** and **Utility** features, the same two
+0.2.x asked for. 0.3.0 adds no new permission to the prompt.
+
 ## Requirements
 
-- A many-to-many relationship (or a view of one) to bind the subgrid to —
-  see [Model-driven apps](model-driven.md) for how the subgrid itself is
-  configured. There is no field-level installation path; this is a dataset
-  control, added to a subgrid, not to a column.
-- Canvas apps and custom pages are not supported — see
+- A relationship between the form's table and the table your tags live in:
+  a native many-to-many, or a lookup on the tag table pointing at the form's
+  table. See [Model-driven apps](model-driven.md).
+- Model-driven apps. Canvas apps and custom pages are not supported; see
   [Limitations](limitations.md).

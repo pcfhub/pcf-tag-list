@@ -1,32 +1,31 @@
 /*
  * Drives the real built bundle outside a browser.
  *
- *     npm run build && npm run smoke
+ *     npm run lint && npm run build && npm run smoke
  *
- * A **virtual dataset** control: `updateView` returns the element it wants
- * rendered, so these assertions read the props it handed down and the calls it
- * made on the platform. Both halves matter here — this is the only control in
- * the catalogue that writes to Dataverse, and *what it asked for* is the
- * decision worth pinning.
+ * A **virtual dataset** control that writes to Dataverse, so both halves are
+ * asserted: what it renders (through `react-dom/server`, against the English
+ * strings from the shipped `.resx`) and what it asked the platform to do
+ * (the rig's call log, and the rig's own link table).
  *
- * Why it exists alongside `npm start`: that harness reports no second page and
- * has no Web API at all, so none of the interesting paths here can be reached
- * from it. The three that matter:
+ * The questions worth pinning, in the order a regression would hurt:
  *
- *   - **creating a tag linked to the host record**, which needs
- *     `mode.contextInfo` (undocumented, model-driven only) and a metadata round
- *     trip to turn a logical name into the entity *set* name `@odata.bind`
- *     wants;
- *   - **creating one where that is impossible** — canvas, the hub's demo
- *     harness, or an unbound `parentLookupField` — where the control has to
- *     create an unlinked tag rather than throw;
- *   - **removing a tag**, which deletes a record because
- *     `ComponentFramework.WebApi` has no disassociate primitive at all.
+ *   - **Removing a tag never deletes one.** 0.2.x called `deleteRecord` on a
+ *     native many-to-many subgrid and deleted the tag from every record that
+ *     had it. Asserted by the absence of the call, not just the presence of
+ *     the right one.
+ *   - **The binding is read, not guessed.** The fixture is the probe's
+ *     environment — an N:N *and* a 1:N between the same two tables — so a
+ *     control that picked one silently fails here.
+ *   - **A failed request becomes a sentence, never an unhandled rejection.**
+ *     0.2.x's first run of this suite ended the Node process; this one fails
+ *     an assertion instead, from a listener installed below.
  *
- * **What passing here does NOT mean.** Every value is supplied by this file. It
- * cannot tell you that `deleteRecord` on a native M:N relationship does
- * anything useful — it does not, and SPEC.md says so — nor that a real form
- * hands down what these fixtures hand down.
+ * **What passing here does NOT mean.** Every answer comes from `dev/host.js`
+ * and `dev/fixture.js`. The `$ref` shapes it models were measured on one real
+ * form (SPEC.md P1–P4); a one-to-many subgrid, a junction table's view, Browse
+ * and the rendered stylesheet were not. Those are in SPEC.md under
+ * "Not verified", and `npm run harness` is where the UI is looked at.
  */
 
 const fs = require('fs');
@@ -55,35 +54,50 @@ const time = clock.install(Date.UTC(2026, 0, 1, 12, 0, 0), global);
 const registration = host.captureRegistration(global);
 
 const source = fs.readFileSync(BUNDLE, 'utf8');
+const React = require(path.join(root, 'node_modules', 'react'));
+const ReactDOMServer = require(path.join(root, 'node_modules', 'react-dom', 'server'));
 
-const reactGlobals = [...new Set(source.match(/\bReactv[\w]*\b/g) || [])];
-const fluentGlobals = [...new Set(source.match(/\bFluentUIReact[\w]*\b/g) || [])];
-
-if (reactGlobals.length > 0) {
-    const React = require(path.join(root, 'node_modules', 'react'));
-
-    reactGlobals.forEach((name) => {
-        global[name] = React;
-    });
-}
-
-const fluent = new Proxy({}, { get: (_t, name) => (typeof name === 'string' ? name : undefined) });
-
-fluentGlobals.forEach((name) => {
-    global[name] = fluent;
+[...new Set(source.match(/\bReactv[\w]*\b/g) || [])].forEach((name) => {
+    global[name] = React;
 });
 
 vm.runInThisContext(source, { filename: 'bundle.js' });
+
+/*
+ * **An unhandled rejection is a failure, not a crash.** 0.2.x chained
+ * `.finally()` with no `.catch()`, and the first run of the old suite simply
+ * died. Counted here and asserted at the end, so the suite says which test
+ * leaked one instead of stopping.
+ */
+const leaked = [];
+
+process.on('unhandledRejection', (reason) => {
+    leaked.push(String(reason && reason.message ? reason.message : reason));
+});
+
+/* ---------------------------------------------------------------- strings */
+
+/** The shipped English strings, so a rendered sentence is the one a user reads. */
+const ENGLISH = (() => {
+    const xml = fs.readFileSync(path.join(root, 'TagList', 'strings', 'TagList.1033.resx'), 'utf8');
+    const strings = {};
+
+    for (const match of xml.matchAll(/<data name="([^"]+)"[^>]*>\s*<value>([^<]*)<\/value>/g)) {
+        strings[match[1]] = match[2].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+    }
+
+    return strings;
+})();
+
+const english = (key) => (ENGLISH[key] !== undefined ? ENGLISH[key] : `resx:${key}`);
 
 /* ---------------------------------------------------------------- harness */
 
 const results = [];
 
 function check(label, ok, detail) {
-    results.push({ ok, label, detail });
+    results.push({ ok: Boolean(ok), label, detail });
 }
-
-const marked = (key) => `resx:${key}`;
 
 const live = [];
 
@@ -93,28 +107,37 @@ function disposeAll() {
     }
 }
 
+/** A native many-to-many subgrid on the probe's account — the case 0.3.0 exists for. */
+const N2N_SUBGRID = {
+    contextInfo: { entityTypeName: 'account', entityId: `{${fixture.PARENT.toUpperCase()}}`, entityRecordName: 'Adventure Works (sample)' },
+    manyToManyFilter: { relationship: fixture.N2N, id: fixture.PARENT },
+};
+
+/** A one-to-many subgrid on the same account: tags whose `cll_account` points at it. */
+const LOOKUP_SUBGRID = {
+    contextInfo: N2N_SUBGRID.contextInfo,
+    relationshipFilter: { column: 'cll_account', id: fixture.PARENT },
+};
+
+const INPUTS = { allowCreate: true, allowNewTags: true, maxVisible: 12, primaryNameField: null, parentLookupField: null, relationshipName: null };
+
 /**
  * Bind a fresh control to a fresh view and render until it settles.
- *
- * `host.drive` renders repeatedly while the control owes another pass, which is
- * how a control that refreshes from inside `updateView` shows up as a count
- * rather than a stack overflow.
+ * `inputs` merge over the maker defaults above.
  */
-function bind(options) {
-    const handle = host.createHost(fixture, { getString: marked, ...options });
+function bind(options = {}) {
+    const handle = host.createHost(fixture, {
+        datasetName: 'tags',
+        getString: english,
+        ...options,
+        inputs: { ...INPUTS, ...(options.inputs || {}) },
+    });
     const container = dom.createElement('div');
     const instance = new registration.ctor();
 
     let notifications = 0;
 
-    instance.init(
-        handle.context,
-        () => {
-            notifications += 1;
-        },
-        {},
-        container,
-    );
+    instance.init(handle.context, () => (notifications += 1), {}, container);
 
     let driven = host.drive(instance, handle, 10);
 
@@ -125,9 +148,14 @@ function bind(options) {
             return driven;
         },
         props: () => (driven.element && driven.element.props) || {},
+        service: () => view.props().service,
+        dataset: () => view.props().dataset,
+        ids: () => view.props().dataset.sortedRecordIds.slice(),
         outputs: () => instance.getOutputs(),
         notifications: () => notifications,
         calls: () => handle.state.calls,
+        callsSince: (mark) => handle.state.calls.slice(mark),
+        html: () => ReactDOMServer.renderToStaticMarkup(driven.element),
         settle: () => {
             driven = host.drive(instance, handle, 10);
 
@@ -149,8 +177,19 @@ function bind(options) {
     return view;
 }
 
-/** Let the promise chains in create/remove settle before reading the log. */
-const flush = () => new Promise((resolve) => setImmediate(resolve));
+/** Resolve the binding, then render once more so the component starts from it. */
+async function ready(view) {
+    const resolved = await view.service().resolve();
+
+    view.settle();
+
+    return resolved;
+}
+
+const linked = (handle, a, b) =>
+    handle.links().some((link) => link.relationship === fixture.N2N && link.ids.includes(a) && link.ids.includes(b));
+
+const count = (html, needle) => html.split(needle).length - 1;
 
 check('bundle registered a control', typeof registration.ctor === 'function');
 
@@ -158,246 +197,452 @@ if (typeof registration.ctor !== 'function') {
     report();
 }
 
-/* ------------------------------------------------------- what it hands down */
-
-const plain = bind({});
-
-check('settles instead of refreshing forever', plain.driven.looping === false, `${plain.driven.passes} passes`);
-
-check('returns an element rather than writing into a container', plain.driven.element !== undefined);
-
-check(
-    'hands the dataset down rather than a copy of it',
-    plain.props().dataset !== undefined && typeof plain.props().dataset.getTargetEntityType === 'function',
-);
-
-check('passes the maker inputs through', plain.props().allowCreate === true && plain.props().maxVisible === 12);
-
-check('and the form read-only state', bind({ disabled: true }).props().disabled === true);
-
-/* --------------------------------------------------- roles, not column names */
-
-/*
- * **The trap this fixture is built around.**
- *
- * `column.alias` is the property-set's role name from the manifest —
- * `labelField`, `colorField` — and it is fixed. `column.name` is the column the
- * maker pointed that role at, and it is what `getFormattedValue()` takes.
- *
- * A fixture that sets both to the same string passes whichever the control
- * reads, so it certifies a control calling `getFormattedValue('labelField')` —
- * which matches nothing on a real form and renders every chip blank, silently.
- * Here they always differ, so the assertion means something.
- */
-const labelColumn = fixture.columns.find((column) => column.alias === 'labelField');
-
-check(
-    'the fixture keeps alias and name different, or nothing below proves anything',
-    labelColumn.alias !== labelColumn.name,
-    `alias: ${labelColumn.alias}, name: ${labelColumn.name}`,
-);
-
-const dataset = plain.props().dataset;
-const firstId = dataset.sortedRecordIds[0];
-
-check(
-    'a record reads its label through the column name behind the role',
-    dataset.records[firstId].getFormattedValue(labelColumn.name) !== '',
-    dataset.records[firstId].getFormattedValue(labelColumn.name),
-);
-
-check(
-    'and reads nothing through the role name itself, which is what a real form does',
-    dataset.records[firstId].getFormattedValue('labelField') === '',
-    JSON.stringify(dataset.records[firstId].getFormattedValue('labelField')),
-);
-
-/* ------------------------------------------------------------- opening */
-
-/*
- * Opening a tag does two things, and both are the control's decision: it
- * reports the record through its output property, and it asks the *platform* to
- * navigate rather than building a URL itself.
- */
-const opened = bind({});
-const openId = opened.props().dataset.sortedRecordIds[0];
-
-opened.props().onOpenTag(openId);
-
-check('opening a tag reports it through the output property', opened.outputs().selectedTagId === openId, opened.outputs().selectedTagId);
-
-check('and notifies the platform once', opened.notifications() === 1, String(opened.notifications()));
-
-check(
-    'and asks the platform to navigate rather than routing itself',
-    opened.calls().some((call) => call.startsWith('openDatasetItem')),
-    opened.calls().join(' '),
-);
-
-/* ------------------------------------------------------------- removing */
-
 (async () => {
-    /*
-     * `ComponentFramework.WebApi` has no `execute` and no relationship-level
-     * disassociate — only create/read/update/delete Record against an entity
-     * set. So removing a tag deletes a record, which only does the right thing
-     * when `tags` is bound to the join entity's own view. That is a real
-     * platform limitation rather than a shortcut, recorded in SPEC.md, and what
-     * is asserted here is the half the control controls: the right entity, the
-     * right id, and a refresh afterwards.
-     */
-    const removed = bind({});
-    const removeId = removed.props().dataset.sortedRecordIds[0];
+    /* ------------------------------------------------ what it hands down */
 
-    removed.props().onRemoveTag(removeId);
-    await flush();
+    const plain = bind(N2N_SUBGRID);
+
+    check('settles instead of refreshing forever', plain.driven.looping === false, `${plain.driven.passes} passes`);
+    check('returns an element rather than writing into a container', plain.driven.element !== undefined);
+    check(
+        'passes the maker inputs through',
+        plain.props().allowCreate === true && plain.props().allowNewTags === true && plain.props().maxVisible === 12,
+    );
+    check('and reads an unset allowNewTags as on, the way its default says', bind({ ...N2N_SUBGRID, inputs: { allowNewTags: null } }).props().allowNewTags === true);
+    check('and the form read-only state', bind({ ...N2N_SUBGRID, disabled: true }).props().disabled === true);
+    check('Browse is offered where the platform has lookupObjects', plain.props().canBrowse === true);
+    check('and not where it has not', bind({ ...N2N_SUBGRID, lookupObjects: false }).props().canBrowse === false);
+
+    /* --------------------------------------------- roles, not column names */
+
+    const labelColumn = fixture.columns.find((column) => column.alias === 'labelField');
 
     check(
-        'removing a tag deletes against the dataset’s own target entity',
-        removed.calls().some((call) => call === `deleteRecord("${fixture.targetEntityType} ${removeId}")`),
-        removed.calls().filter((c) => c.startsWith('deleteRecord')).join(' ') || 'no deleteRecord',
+        'the fixture keeps alias and name different, or nothing below proves anything',
+        labelColumn.alias !== labelColumn.name,
+        `alias: ${labelColumn.alias}, name: ${labelColumn.name}`,
     );
+
+    const firstId = plain.ids()[0];
 
     check(
-        'and refreshes the view afterwards rather than leaving it stale',
-        removed.calls().some((call) => call === 'refresh'),
-        removed.calls().join(' '),
+        'a record reads its label through the column name behind the role',
+        plain.dataset().records[firstId].getFormattedValue(labelColumn.name) === 'Feature',
+        plain.dataset().records[firstId].getFormattedValue(labelColumn.name),
     );
 
-    /*
-     * ⚠️ **There is no assertion here for a delete that fails, and the reason
-     * is a finding rather than an omission.**
-     *
-     * `onRemoveTag` chains `.finally(() => dataset.refresh())` and no `.catch`,
-     * so a rejected `deleteRecord` becomes an unhandled promise rejection. In
-     * Node that ends the process, which is how this was found — the first run
-     * of this suite died rather than failing an assertion. In a browser it is a
-     * console error the user never sees: the list refreshes, the tag is still
-     * there, and nothing says why.
-     *
-     * `createTag` has the same shape. Writing an assertion for the current
-     * behaviour would pin a defect in place, and fixing it is not a one-line
-     * change — the props carry no error surface, so somebody has to decide what
-     * the user is told. Recorded in SPEC.md under "Still open" instead. Restore
-     * `webApiFails: true` here once there is a decision to assert.
-     */
+    /* ----------------------------------------------------------- opening */
 
-    /* ------------------------------------------------------------ creating */
+    plain.props().onOpenTag(firstId);
+
+    check('opening a tag reports it through the output property', plain.outputs().selectedTagId === firstId);
+    check('and asks the platform to navigate', plain.calls().some((call) => call.startsWith('openDatasetItem')), plain.calls().join(' '));
+
+    /* ------------------------------------------ the binding, from metadata */
 
     /*
-     * **The subtle one.** `@odata.bind` needs the parent's entity *set* name,
-     * which is plural and is not the logical name — there is no static mapping
-     * available to a control, so it costs a metadata round trip. A control that
-     * used `entityTypeName` directly builds `/account(id)` where the platform
-     * wants `/accounts(id)`, and the create fails at the server.
+     * The probe's environment: one N:N and one lookup between account and
+     * cll_tag. Nothing a subgrid hands over says which one it is showing.
      */
-    const created = bind({});
-
-    created.props().onCreateTag('Renewal risk');
-    await flush();
+    const unnamed = bind(N2N_SUBGRID);
+    const ambiguous = await ready(unnamed);
 
     check(
-        'creating a linked tag resolves the entity set name first',
-        created.calls().some((call) => call === 'getEntityMetadata("account")'),
-        created.calls().join(' '),
+        'two relationships between the tables resolve as ambiguous, not as a guess',
+        ambiguous.binding.kind === 'ambiguous'
+            && ambiguous.binding.candidates.includes(fixture.N2N)
+            && ambiguous.binding.candidates.includes('cll_Account_Account_cll_Tag'),
+        JSON.stringify(ambiguous.binding),
     );
 
-    const createCall = created.calls().find((call) => call.startsWith('createRecord'));
+    const ambiguousHtml = unnamed.html();
 
     check(
-        'and binds through the plural set name, not the logical name',
-        Boolean(createCall) && createCall.includes('/accounts(acc-1)'),
-        createCall || 'no createRecord',
+        'and the maker is told which names to choose from',
+        ambiguousHtml.includes(fixture.N2N) && ambiguousHtml.includes('Set Relationship name'),
+        ambiguousHtml.slice(0, 300),
     );
+    check('with no add box offered', !ambiguousHtml.includes('role="combobox"'));
+    check('and no remove button, since removing would act on a guess', count(ambiguousHtml, 'TagList-chip-remove') === 0);
+
+    const named = bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N } });
+    const n2n = await ready(named);
 
     check(
-        'writing the label to the column the maker named',
-        Boolean(createCall) && createCall.includes('new_tagname'),
-        createCall || 'no createRecord',
+        'a named N:N links from the parent side, with the navigation property the metadata gives',
+        n2n.binding.kind === 'manyToMany' && n2n.binding.navigation === fixture.N2N && n2n.parentSet === 'accounts',
+        JSON.stringify(n2n),
+    );
+    check('matching the name case-insensitively', (await ready(bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N.toLowerCase() } }))).binding.kind === 'manyToMany');
+    check(
+        'and reading the relationships through one same-origin fetch each',
+        named.calls().filter((call) => call.includes('ManyToManyRelationships')).length === 1
+            && named.calls().filter((call) => call.includes('ManyToOneRelationships')).length === 1,
+        named.calls().filter((call) => call.startsWith('fetch')).join(' '),
     );
 
-    check('and refreshes afterwards', created.calls().some((call) => call === 'refresh'));
+    const byColumn = await ready(bind({ ...LOOKUP_SUBGRID, inputs: { relationshipName: 'cll_account' } }));
+
+    check(
+        'a lookup can be named by its column, and binds through its navigation property',
+        byColumn.binding.kind === 'oneToMany' && byColumn.binding.column === 'cll_account' && byColumn.binding.navigation === 'cll_Account',
+        JSON.stringify(byColumn.binding),
+    );
+
+    const onlyLookup = await ready(bind(LOOKUP_SUBGRID));
+
+    check('the probe tables stay ambiguous from a lookup subgrid too', onlyLookup.binding.kind === 'ambiguous', onlyLookup.binding.kind);
+
+    const soleLookup = bindWith({ ...fixture, manyToMany: [] }, LOOKUP_SUBGRID);
+    const sole = await ready(soleLookup);
+
+    check('with only one relationship there is nothing to name', sole.binding.kind === 'oneToMany', JSON.stringify(sole.binding));
+
+    const noParent = bind({ inputs: { relationshipName: fixture.N2N } });
+    const unsaved = await ready(noParent);
+
+    check('no contextInfo is an unsaved record or not a form', unsaved.binding.kind === 'unknown' && unsaved.binding.reason === 'noParent');
+    check('and says to save, rather than offering an add box that cannot work', noParent.html().includes(english('TagList_NoticeNoParent')) && !noParent.html().includes('role="combobox"'));
+
+    const refused = await ready(bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N }, quirks: { relationshipsStatus: 403 } }));
+
+    check('refused metadata leaves the tags readable and unchangeable', refused.binding.kind === 'unknown' && refused.binding.reason === 'noMetadata', JSON.stringify(refused.binding));
+
+    const typo = await ready(bind({ ...N2N_SUBGRID, inputs: { relationshipName: 'cll_nothing' } }));
+
+    check('a relationship name that matches nothing is said, not ignored', typo.binding.kind === 'unknown' && typo.binding.reason === 'unmatchedName');
+
+    const selfRelated = await ready(
+        bindWith(
+            { ...fixture, manyToMany: [{ schemaName: 'cll_tag_tag', entity1: 'cll_tag', entity2: 'cll_tag', nav1: 'a', nav2: 'b' }], relationships: [] },
+            { contextInfo: { entityTypeName: 'cll_tag', entityId: fixture.guid(1) } },
+        ),
+    );
+
+    check('a table related to itself is refused rather than linked the wrong way round', selfRelated.binding.kind === 'unknown' && selfRelated.binding.reason === 'selfReferential');
+
+    const junction = await ready(
+        bindWith(
+            { ...fixture, columns: fixture.columns.map((column) => (column.alias === 'labelField' ? { ...column, name: 'tag.cll_tagname' } : column)) },
+            N2N_SUBGRID,
+        ),
+    );
+
+    check('a label read through a linked table marks a view of link rows', junction.binding.kind === 'linkRows');
+
+    /* ------------------------------------------------------- rendering */
+
+    const html = named.html();
+
+    check('renders the loaded chips, up to maxVisible', count(html, 'class="TagList-chip"') === named.ids().length, `${count(html, 'class="TagList-chip"')} chips, ${named.ids().length} loaded`);
+    check('each with a remove button named for its tag', html.includes('aria-label="Remove Feature"') && count(html, 'TagList-chip-remove') === named.ids().length);
+    check('and a combobox to add with', html.includes('role="combobox"') && html.includes('aria-expanded="false"'));
+    check('with Browse inside the same field surface', /TagList-field[^>]*>.*TagList-browse/.test(html));
+
+    const unloaded = fixture.links.length - named.ids().length;
+
+    check(
+        'counts the tags on pages not loaded yet, from totalResultCount',
+        html.includes(english('TagList_MoreButton').replace('{0}', String(unloaded))),
+        `expected "${english('TagList_MoreButton').replace('{0}', String(unloaded))}"`,
+    );
+    check('a colour tints the chip edge through a custom property', html.includes('--taglist-chip-accent:#7C3AED'));
+    check('an empty colour is no colour, not an empty declaration', !html.includes('chip-accent:;') && count(html, 'chip-accent:') === count(html, 'chip-accent:#'));
+
+    const lockedHtml = bindReady({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N }, disabled: true });
+    const offHtml = bindReady({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N, allowCreate: false } });
+
+    const [locked, off] = await Promise.all([lockedHtml, offHtml]);
+
+    check('a read-only form shows chips with no remove and no add box', count(locked, 'TagList-chip-remove') === 0 && !locked.includes('role="combobox"'));
+    check('and says nothing about relationships, since there is nothing to configure', !locked.includes('TagList-notice'));
+    check('allowCreate off hides the add box, as it did in 0.2.x', !off.includes('role="combobox"'));
+    check('but keeps removal, as it did in 0.2.x', count(off, 'TagList-chip-remove') > 0);
+
+    const darkHtml = await bindReady({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N }, dark: true });
+    const noThemeHtml = await bindReady({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N } });
+
+    check('a dark host theme adds the dark class', darkHtml.includes('class="TagList TagList--dark'));
+    check('and a host that publishes no theme gets the light fallbacks, not a guess', !noThemeHtml.includes('TagList--dark'));
+
+    /* ----------------------------------------------------- many-to-many */
 
     /*
-     * Where linking is impossible the tag is still created, unlinked, rather
-     * than the interaction failing. `contextInfo` is absent on canvas and in the
-     * hub's own demo harness, so this is the path the published demo takes.
+     * **The assertion 0.3.0 exists for.** Removing sends a `$ref` DELETE from
+     * the parent's side, and never `deleteRecord` — which on this subgrid
+     * deleted the tag itself in 0.2.x.
      */
-    const unlinked = bind({ host: 'canvas' });
+    const removing = bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N } });
 
-    unlinked.props().onCreateTag('Floating');
-    await flush();
+    await ready(removing);
 
-    const unlinkedCall = unlinked.calls().find((call) => call.startsWith('createRecord'));
+    const victim = removing.ids()[1];
+    const mark = removing.calls().length;
+    const removed = await removing.service().remove(victim, 'Bug', { title: 't', text: 't' });
+    const removeCalls = removing.callsSince(mark);
 
     check(
-        'a host with no contextInfo still creates the tag, unlinked',
-        Boolean(unlinkedCall) && !unlinkedCall.includes('@odata.bind'),
-        unlinkedCall || 'no createRecord',
+        'removing sends DELETE $ref from the parent, through the relationship',
+        removeCalls.some((call) => call.includes(`DELETE /api/data/v9.2/accounts(${fixture.PARENT})/${fixture.N2N}(${victim})/$ref`)),
+        removeCalls.join(' '),
     );
-
+    check('and never deletes a record', !removing.calls().some((call) => call.startsWith('webAPI.deleteRecord')), removing.calls().filter((c) => c.includes('delete')).join(' '));
     check(
-        'and does not go looking for metadata it cannot use',
-        !unlinked.calls().some((call) => call.startsWith('getEntityMetadata')),
-        unlinked.calls().join(' '),
+        'the link is gone and the tag is not',
+        removed === true && !linked(removing.handle, fixture.PARENT, victim) && removing.handle.stored(victim, 'cll_tagname') === 'Bug',
+        `stored: ${removing.handle.stored(victim, 'cll_tagname')}`,
     );
+    check('and the view refreshes to show it', removeCalls.includes('refresh') && !removing.ids().includes(victim));
 
-    const noLookup = bind({ parentLookupField: null });
+    const searching = bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N } });
 
-    noLookup.props().onCreateTag('Unbound');
-    await flush();
+    await ready(searching);
 
+    const beforeSearch = searching.calls().length;
+    const found = await searching.service().search('a');
+    const query = searching.callsSince(beforeSearch).find((call) => call.startsWith('webAPI.retrieveMultipleRecords')) || '';
+
+    check('a search asks the server, not the loaded rows', query.includes('cll_tag') && decodeURIComponent(query).includes("contains(cll_tagname,'a')"), query);
+    check('sorted by name and capped', query.includes('$orderby=cll_tagname') && /\$top=\d+/.test(query));
     check(
-        'an unbound parentLookupField is the same story',
-        Boolean(noLookup.calls().find((call) => call.startsWith('createRecord')))
-            && !noLookup.calls().find((call) => call.startsWith('createRecord')).includes('@odata.bind'),
+        'finds tags on no record yet',
+        ['Power Apps', 'Dataverse', 'Black'].every((name) => found.some((tag) => tag.name === name)),
+        found.map((tag) => tag.name).join(', '),
+    );
+    check(
+        'and leaves out the ones already showing as chips',
+        !found.some((tag) => searching.ids().includes(tag.id)),
+        found.map((tag) => tag.name).join(', '),
     );
 
     /*
-     * `getEntityMetadata` is typed as always present and is not. The control
-     * guards it with a `typeof` check, which is only meaningful if a host
-     * without it exists — so here is one.
+     * Found in the harness, not by this suite: with five chips loaded of
+     * fourteen, a search offered "Accessibility" — linked, on page two. The
+     * record's whole link set is read through the parent's navigation
+     * property, once, and kept out of the suggestions.
      */
-    const noMetadata = bind({ hasEntityMetadata: false });
+    check(
+        'and leaves out tags linked on pages not loaded yet',
+        !found.some((tag) => ['Accessibility', 'Backlog', 'Performance'].includes(tag.name)),
+        found.map((tag) => tag.name).join(', '),
+    );
 
-    noMetadata.props().onCreateTag('No metadata here');
-    await flush();
+    await searching.service().search('e');
 
     check(
-        'a host without getEntityMetadata creates unlinked rather than throwing',
-        Boolean(noMetadata.calls().find((call) => call.startsWith('createRecord'))),
-        noMetadata.calls().join(' '),
+        'reading the link set once, not once per search',
+        searching.calls().filter((call) => call.includes(`GET /api/data/v9.2/accounts(${fixture.PARENT})/${fixture.N2N}?`)).length === 1,
+        searching.calls().filter((call) => call.startsWith('fetch("GET')).join(' '),
     );
+
+    const quoted = await searching.service().search("o'b").catch((error) => [{ name: `rejected: ${error.message}` }]);
+
+    check("escapes a quote as '' so the filter parses", quoted.length === 1 && quoted[0].name === "O'Brien", JSON.stringify(quoted));
+    check('an empty term asks nothing', (await searching.service().search('   ')).length === 0);
+
+    const dataverse = found.find((tag) => tag.name === 'Dataverse');
+    const beforeAttach = searching.calls().length;
+
+    await searching.service().attach(dataverse);
+
+    const attachCall = searching.callsSince(beforeAttach).find((call) => call.includes('POST')) || '';
+
+    check('attaching POSTs $ref from the parent side', attachCall.includes(`POST /api/data/v9.2/accounts(${fixture.PARENT})/${fixture.N2N}/$ref`), attachCall);
+    check('and the link lands in the relationship', linked(searching.handle, fixture.PARENT, dataverse.id));
+
+    const beforeCreate = searching.calls().length;
+
+    await searching.service().create('Renewal risk');
+
+    const createCalls = searching.callsSince(beforeCreate);
+    const createRecord = createCalls.find((call) => call.startsWith('webAPI.createRecord')) || '';
+    const createdRow = searching.handle.state.created[searching.handle.state.created.length - 1];
+
+    check('creating writes the name to the primary name column from metadata', createRecord.includes('"cll_tagname":"Renewal risk"'), createRecord);
+    check('with no lookup bind under a many-to-many', !createRecord.includes('@odata.bind'), createRecord);
+    check('and refreshes, so the new chip arrives with the next fetch', createCalls.lastIndexOf('refresh') > createCalls.findIndex((call) => call.startsWith('webAPI.createRecord')), createCalls.join(' '));
+    check(
+        'then links the new tag',
+        createdRow && linked(searching.handle, fixture.PARENT, String(createdRow.id).toLowerCase()),
+        createCalls.join(' '),
+    );
+
+    const picking = bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N }, lookupPick: { id: fixture.guid(15), entityType: 'cll_tag', name: 'Power Apps' } });
+
+    await ready(picking);
+
+    const picked = await picking.service().browse();
+    const pickCall = picking.calls().find((call) => call.startsWith('utils.lookupObjects')) || '';
+
+    check('Browse opens the platform lookup, multi-select, on the tag table', pickCall.includes('"allowMultiSelect":true') && pickCall.includes('cll_tag'), pickCall);
+    check('and links what was picked, braced and upper-cased as the platform hands it', picked === 1 && linked(picking.handle, fixture.PARENT, fixture.guid(15)));
+
+    const cancelling = bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N } });
+
+    await ready(cancelling);
+
+    const cancelMark = cancelling.calls().length;
+
+    check('a cancelled Browse is a resolve with nothing, and asks nothing more', (await cancelling.service().browse()) === 0 && !cancelling.callsSince(cancelMark).some((call) => call.includes('$ref')));
+
+    /* ------------------------------------------------------- one-to-many */
+
+    const lookup = bind({ ...LOOKUP_SUBGRID, inputs: { relationshipName: 'cll_account' } });
+
+    await ready(lookup);
+
+    check('a lookup subgrid shows the tags that point at the record', lookup.ids().length === 2, lookup.ids().join(','));
+
+    const lookupVictim = lookup.ids()[1];
+
+    await lookup.service().remove(lookupVictim, 'Bug', { title: 't', text: 't' });
+
+    const clear = lookup.calls().find((call) => call.startsWith('webAPI.updateRecord')) || '';
+
+    check('removing clears the lookup with a null bind', clear.includes('"cll_Account@odata.bind":null'), clear);
+    check('and still never deletes', !lookup.calls().some((call) => call.startsWith('webAPI.deleteRecord')));
+
+    lookup.handle.reread();
+    lookup.dataset().refresh();
+
+    check('the tag leaves the subgrid once the write is read back', !lookup.ids().includes(lookupVictim), lookup.ids().join(','));
+
+    const lookupFound = await lookup.service().search('e');
+    const lookupQuery = decodeURIComponent(lookup.calls().filter((call) => call.startsWith('webAPI.retrieveMultipleRecords')).pop() || '');
+
+    check('a lookup search asks only for tags nobody owns', lookupQuery.includes('_cll_account_value eq null'), lookupQuery);
+    check('so a tag owned by another record is never offered', !lookupFound.some((tag) => tag.name === 'Taken elsewhere'), lookupFound.map((t) => t.name).join(', '));
+
+    await lookup.service().attach({ id: fixture.guid(16), name: 'Dataverse' });
+
+    const bindCall = lookup.calls().filter((call) => call.startsWith('webAPI.updateRecord')).pop() || '';
+
+    check('attaching binds the lookup to the record through its entity set', bindCall.includes(`"cll_Account@odata.bind":"/accounts(${fixture.PARENT})"`), bindCall);
+
+    await lookup.service().create('Owned from birth');
+
+    const lookupCreate = lookup.calls().filter((call) => call.startsWith('webAPI.createRecord')).pop() || '';
+
+    check('creating binds in the same request', lookupCreate.includes(`"cll_Account@odata.bind":"/accounts(${fixture.PARENT})"`) && lookupCreate.includes('Owned from birth'), lookupCreate);
+
+    /* --------------------------------------------------------- link rows */
+
+    const junctionFixture = { ...fixture, columns: fixture.columns.map((column) => (column.alias === 'labelField' ? { ...column, name: 'tag.cll_tagname' } : column)) };
+    const rows = bindWith(junctionFixture, { ...N2N_SUBGRID, dialogs: 'cancelled' });
+
+    await ready(rows);
+
+    const kept = await rows.service().remove(rows.ids()[0], 'Feature', { title: english('TagList_ConfirmTitle'), text: 'Remove Feature?' });
+
+    check('a link row is deleted only after the platform confirm', rows.calls().some((call) => call.startsWith('navigation.openConfirmDialog')));
+    check('and a cancel — which resolves — deletes nothing', kept === false && !rows.calls().some((call) => call.startsWith('webAPI.deleteRecord')));
+
+    const confirmed = bindWith(junctionFixture, { ...N2N_SUBGRID, dialogs: 'confirmed' });
+
+    await ready(confirmed);
+
+    const doomed = confirmed.ids()[0];
+
+    await confirmed.service().remove(doomed, 'Feature', { title: 't', text: 't' });
+
+    check('a confirmed removal deletes that row', confirmed.calls().some((call) => call.startsWith('webAPI.deleteRecord') && call.includes(doomed)), confirmed.calls().filter((c) => c.includes('delete')).join(' '));
+
+    /* --------------------------------------------------------- refusals */
+
+    const forbidden = bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N }, quirks: { refStatus: 403 } });
+
+    await ready(forbidden);
+
+    const refusal = await forbidden.service().remove(forbidden.ids()[0], 'Feature', { title: 't', text: 't' }).then(() => null, (error) => error);
+
+    check('a refused unlink rejects with an Error', refusal instanceof Error, String(refusal));
+    check("carrying the server's own sentence", refusal && /privilege/i.test(refusal.message), refusal && refusal.message);
+    check('and leaves the link in place', linked(forbidden.handle, fixture.PARENT, forbidden.ids()[0]));
+
+    const offline = bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N }, quirks: { refStatus: 0 } });
+
+    await ready(offline);
+
+    const lost = await offline.service().attach({ id: fixture.guid(17), name: "O'Brien" }).then(() => null, (error) => error);
+
+    check('an offline host rejects too, as a sentence', lost instanceof Error && lost.message !== '', lost && lost.message);
+
+    const failing = bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N }, webApiFails: true });
+
+    await ready(failing);
+
+    const searchFault = await failing.service().search('a').then(() => null, (error) => error);
+
+    check('a refused search turns the platform\'s plain-object rejection into an Error', searchFault instanceof Error && searchFault.message === 'The records could not be retrieved.', searchFault && searchFault.message);
 
     /* --------------------------------------------------- what destroy owes */
 
-    /*
-     * **Keep this when the rest of the file changes.** Both numbers are zero
-     * today — the control's own `destroy` says so in a comment, and this turns
-     * that comment into something that fails if it stops being true.
-     */
     disposeAll();
 
     const timersBefore = time.pending();
     const listeners = () => Object.values(dom.document.listeners).reduce((total, list) => total + list.length, 0);
     const listenersBefore = listeners();
 
-    bind({}).destroy();
+    bind(N2N_SUBGRID).destroy();
 
     check('destroy() releases every timer the control took', time.pending() === timersBefore, `${timersBefore} → ${time.pending()}`);
-
     check('and every document-level listener', listeners() === listenersBefore, `${listenersBefore} → ${listeners()}`);
 
     disposeAll();
 
+    await new Promise((resolve) => setImmediate(resolve));
+
+    check('no request anywhere above ended as an unhandled rejection', leaked.length === 0, leaked.join(' | '));
+
     report();
-})();
+})().catch((error) => {
+    check('the suite itself ran to the end', false, error && error.stack);
+    report();
+});
+
+/** A host over a variant of the fixture — the binding cases need tables the default does not have. */
+function bindWith(variant, options) {
+    const handle = host.createHost(variant, { datasetName: 'tags', getString: english, ...options, inputs: { ...INPUTS, ...((options && options.inputs) || {}) } });
+    const container = dom.createElement('div');
+    const instance = new registration.ctor();
+
+    instance.init(handle.context, () => undefined, {}, container);
+
+    let driven = host.drive(instance, handle, 10);
+
+    const view = {
+        handle,
+        props: () => (driven.element && driven.element.props) || {},
+        service: () => view.props().service,
+        dataset: () => view.props().dataset,
+        ids: () => view.props().dataset.sortedRecordIds.slice(),
+        calls: () => handle.state.calls,
+        html: () => ReactDOMServer.renderToStaticMarkup(driven.element),
+        settle: () => {
+            driven = host.drive(instance, handle, 10);
+        },
+        destroy: () => instance.destroy(),
+    };
+
+    live.push(view);
+
+    return view;
+}
+
+/** Bind, resolve, and hand back the markup it then renders. */
+async function bindReady(options) {
+    const view = bind(options);
+
+    await ready(view);
+
+    return view.html();
+}
 
 function report() {
     const failed = results.filter((result) => !result.ok);
 
     for (const result of results) {
-        const detail = result.detail ? `  — ${result.detail}` : '';
+        const detail = result.detail && !result.ok ? `  — ${result.detail}` : '';
 
         console.log(`  ${result.ok ? 'ok  ' : 'FAIL'}  ${result.label}${detail}`);
     }

@@ -82,10 +82,10 @@
   </data>
 
   <data name="AllowCreate_Name" xml:space="preserve">
-    <value>Permitir crear nuevas etiquetas</value>
+    <value>Permitir agregar etiquetas</value>
   </data>
   <data name="AllowCreate_Desc" xml:space="preserve">
-    <value>Muestra el cuadro para añadir etiquetas. Desactívalo para una lista de chips de solo lectura.</value>
+    <value>Muestra el cuadro para agregar etiquetas. Desactívelo para una lista de solo lectura.</value>
   </data>
 
   <data name="MaxVisible_Name" xml:space="preserve">
@@ -99,14 +99,14 @@
     <value>Campo de nombre principal</value>
   </data>
   <data name="PrimaryNameField_Desc" xml:space="preserve">
-    <value>Nombre lógico de la columna de nombre principal de la entidad de etiqueta, en la que se escribe al crear una etiqueta nueva. El valor predeterminado es "name".</value>
+    <value>Solo se usa cuando no se pueden leer los metadatos de la tabla de etiquetas: su columna de nombre principal, en la que se busca y se escribe al crear una etiqueta.</value>
   </data>
 
   <data name="ParentLookupField_Name" xml:space="preserve">
     <value>Campo de búsqueda del registro principal</value>
   </data>
   <data name="ParentLookupField_Desc" xml:space="preserve">
-    <value>Nombre lógico de la columna de búsqueda de la entidad de etiqueta que hace referencia al registro principal (por ejemplo, regardingobjectid).</value>
+    <value>Ya no se usa: la búsqueda se obtiene de los metadatos. Se conserva para que los formularios existentes se importen sin problemas.</value>
   </data>
 
   <data name="SelectedTagId_Name" xml:space="preserve">
@@ -129,9 +129,78 @@
     <value>Quitar {0}</value>
   </data>
   <data name="TagList_AddPlaceholder" xml:space="preserve">
-    <value>Añadir una etiqueta…</value>
+    <value>Agregar una etiqueta…</value>
   </data>
-  <data name="TagList_AddButton" xml:space="preserve">
-    <value>Añadir</value>
+  <data name="AllowNewTags_Name" xml:space="preserve">
+    <value>Permitir etiquetas nuevas</value>
+  </data>
+  <data name="AllowNewTags_Desc" xml:space="preserve">
+    <value>Ofrece crear una etiqueta que aún no existe. Desactívelo para adjuntar solo etiquetas existentes.</value>
+  </data>
+  <data name="RelationshipName_Name" xml:space="preserve">
+    <value>Nombre de la relación</value>
+  </data>
+  <data name="RelationshipName_Desc" xml:space="preserve">
+    <value>Solo es necesario cuando varias relaciones unen las dos tablas: la relación que muestra esta subcuadrícula (su nombre de esquema o una columna de búsqueda). El control enumera las opciones cuando hace falta.</value>
+  </data>
+  <data name="TagList_MoreUnknown" xml:space="preserve">
+    <value>Más…</value>
+  </data>
+  <data name="TagList_ShowFewer" xml:space="preserve">
+    <value>Mostrar menos</value>
+  </data>
+  <data name="TagList_LoadMore" xml:space="preserve">
+    <value>Cargar más</value>
+  </data>
+  <data name="TagList_Browse" xml:space="preserve">
+    <value>Examinar</value>
+  </data>
+  <data name="TagList_BrowseLabel" xml:space="preserve">
+    <value>Examinar todas las etiquetas</value>
+  </data>
+  <data name="TagList_CreateOption" xml:space="preserve">
+    <value>Crear «{0}»</value>
+  </data>
+  <data name="TagList_Searching" xml:space="preserve">
+    <value>Buscando…</value>
+  </data>
+  <data name="TagList_NoMatches" xml:space="preserve">
+    <value>No hay etiquetas coincidentes</value>
+  </data>
+  <data name="TagList_Dismiss" xml:space="preserve">
+    <value>Descartar</value>
+  </data>
+  <data name="TagList_ErrorAdd" xml:space="preserve">
+    <value>No se pudo agregar {0}. {1}</value>
+  </data>
+  <data name="TagList_ErrorRemove" xml:space="preserve">
+    <value>No se pudo quitar {0}. {1}</value>
+  </data>
+  <data name="TagList_ErrorSearch" xml:space="preserve">
+    <value>No se pudieron buscar etiquetas. {0}</value>
+  </data>
+  <data name="TagList_NoticeAmbiguous" xml:space="preserve">
+    <value>Varias relaciones unen estas tablas. Establezca Nombre de la relación en una de estas: {0}.</value>
+  </data>
+  <data name="TagList_NoticeUnmatched" xml:space="preserve">
+    <value>El nombre de la relación no coincide con ninguna relación entre estas tablas.</value>
+  </data>
+  <data name="TagList_NoticeNoRelationship" xml:space="preserve">
+    <value>Ninguna relación une estas tablas, por lo que las etiquetas se pueden mostrar pero no cambiar.</value>
+  </data>
+  <data name="TagList_NoticeNoParent" xml:space="preserve">
+    <value>Guarde el registro para agregar etiquetas.</value>
+  </data>
+  <data name="TagList_NoticeNoMetadata" xml:space="preserve">
+    <value>No se pudieron leer las relaciones de las tablas, por lo que las etiquetas se pueden mostrar pero no cambiar.</value>
+  </data>
+  <data name="TagList_NoticeSelf" xml:space="preserve">
+    <value>No se admite una tabla relacionada consigo misma, por lo que las etiquetas se pueden mostrar pero no cambiar.</value>
+  </data>
+  <data name="TagList_ConfirmTitle" xml:space="preserve">
+    <value>Quitar etiqueta</value>
+  </data>
+  <data name="TagList_ConfirmText" xml:space="preserve">
+    <value>¿Quitar {0} de este registro? Se elimina la fila de vínculo; la etiqueta se conserva.</value>
   </data>
 </root>

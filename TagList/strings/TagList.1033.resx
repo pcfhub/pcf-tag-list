@@ -87,10 +87,10 @@
   </data>
 
   <data name="AllowCreate_Name" xml:space="preserve">
-    <value>Allow creating new tags</value>
+    <value>Allow adding tags</value>
   </data>
   <data name="AllowCreate_Desc" xml:space="preserve">
-    <value>Shows the add-tag box. Turn off for a read-only chip list.</value>
+    <value>Shows the box for adding tags. Turn off for a read-only chip list.</value>
   </data>
 
   <data name="MaxVisible_Name" xml:space="preserve">
@@ -104,14 +104,14 @@
     <value>Primary name field</value>
   </data>
   <data name="PrimaryNameField_Desc" xml:space="preserve">
-    <value>Logical name of the tag entity's primary name column, written to when a new tag is created. Defaults to "name".</value>
+    <value>Used only when the tag table's metadata cannot be read: its primary name column, searched and written to when a tag is created.</value>
   </data>
 
   <data name="ParentLookupField_Name" xml:space="preserve">
     <value>Parent lookup field</value>
   </data>
   <data name="ParentLookupField_Desc" xml:space="preserve">
-    <value>Logical name of the lookup column on the tag entity that references the parent record (e.g. regardingobjectid).</value>
+    <value>No longer used: the lookup is found from metadata. Kept so existing forms import cleanly.</value>
   </data>
 
   <data name="SelectedTagId_Name" xml:space="preserve">
@@ -140,7 +140,76 @@
   <data name="TagList_AddPlaceholder" xml:space="preserve">
     <value>Add a tag…</value>
   </data>
-  <data name="TagList_AddButton" xml:space="preserve">
-    <value>Add</value>
+  <data name="AllowNewTags_Name" xml:space="preserve">
+    <value>Allow new tags</value>
+  </data>
+  <data name="AllowNewTags_Desc" xml:space="preserve">
+    <value>Offers to create a tag that does not exist yet. Turn off to attach existing tags only.</value>
+  </data>
+  <data name="RelationshipName_Name" xml:space="preserve">
+    <value>Relationship name</value>
+  </data>
+  <data name="RelationshipName_Desc" xml:space="preserve">
+    <value>Only needed when more than one relationship joins the two tables: the relationship this subgrid shows (its schema name, or a lookup column). The control lists the candidates when it is needed.</value>
+  </data>
+  <data name="TagList_MoreUnknown" xml:space="preserve">
+    <value>More…</value>
+  </data>
+  <data name="TagList_ShowFewer" xml:space="preserve">
+    <value>Show fewer</value>
+  </data>
+  <data name="TagList_LoadMore" xml:space="preserve">
+    <value>Load more</value>
+  </data>
+  <data name="TagList_Browse" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="TagList_BrowseLabel" xml:space="preserve">
+    <value>Browse all tags</value>
+  </data>
+  <data name="TagList_CreateOption" xml:space="preserve">
+    <value>Create “{0}”</value>
+  </data>
+  <data name="TagList_Searching" xml:space="preserve">
+    <value>Searching…</value>
+  </data>
+  <data name="TagList_NoMatches" xml:space="preserve">
+    <value>No matching tags</value>
+  </data>
+  <data name="TagList_Dismiss" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
+  <data name="TagList_ErrorAdd" xml:space="preserve">
+    <value>{0} could not be added. {1}</value>
+  </data>
+  <data name="TagList_ErrorRemove" xml:space="preserve">
+    <value>{0} could not be removed. {1}</value>
+  </data>
+  <data name="TagList_ErrorSearch" xml:space="preserve">
+    <value>Tags could not be searched. {0}</value>
+  </data>
+  <data name="TagList_NoticeAmbiguous" xml:space="preserve">
+    <value>More than one relationship joins these tables. Set Relationship name to one of: {0}.</value>
+  </data>
+  <data name="TagList_NoticeUnmatched" xml:space="preserve">
+    <value>Relationship name does not match a relationship between these tables.</value>
+  </data>
+  <data name="TagList_NoticeNoRelationship" xml:space="preserve">
+    <value>No relationship joins these tables, so tags can be shown but not changed.</value>
+  </data>
+  <data name="TagList_NoticeNoParent" xml:space="preserve">
+    <value>Save the record to add tags.</value>
+  </data>
+  <data name="TagList_NoticeNoMetadata" xml:space="preserve">
+    <value>The tables' relationships could not be read, so tags can be shown but not changed.</value>
+  </data>
+  <data name="TagList_NoticeSelf" xml:space="preserve">
+    <value>A table related to itself is not supported, so tags can be shown but not changed.</value>
+  </data>
+  <data name="TagList_ConfirmTitle" xml:space="preserve">
+    <value>Remove tag</value>
+  </data>
+  <data name="TagList_ConfirmText" xml:space="preserve">
+    <value>Remove {0} from this record? The link row is deleted; the tag itself is kept.</value>
   </data>
 </root>

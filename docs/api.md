@@ -47,3 +47,11 @@ not part of the control.
 record), not when a chip is added or removed — there's no separate output
 for those, since the dataset itself already reflects the current set of
 tags.
+
+`relationshipName` takes a many-to-many's schema name, a one-to-many's schema
+name, or the lookup column's logical name, matched without regard to case. It
+is needed only when more than one relationship joins the two tables, and the
+control lists the candidates when it is.
+
+`parentLookupField` is no longer read as of 0.3.0; see
+[Migration](migration.md).
