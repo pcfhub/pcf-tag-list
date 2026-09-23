@@ -38,6 +38,9 @@ Three smaller changes follow from it:
    flow: tags whose lookup is empty.
 :::
 
+0.4.0 adds only **Sample data**, which feeds the demo on this page. Leave it
+blank; there is nothing else to do.
+
 :::callout{type=warning}
 If 0.2.x was used on a native many-to-many subgrid, tags removed with it were
 deleted, and not only from that record. They cannot be restored by upgrading.

@@ -212,4 +212,13 @@
   <data name="TagList_ConfirmText" xml:space="preserve">
     <value>Remove {0} from this record? The link row is deleted; the tag itself is kept.</value>
   </data>
+  <data name="SampleData_Name" xml:space="preserve">
+    <value>Sample data (demo only)</value>
+  </data>
+  <data name="SampleData_Desc" xml:space="preserve">
+    <value>A JSON document of tags the control shows instead of the record's. Leave blank on a real form.</value>
+  </data>
+  <data name="TagList_NoticeSample" xml:space="preserve">
+    <value>The sample data could not be read, so no tags are shown.</value>
+  </data>
 </root>

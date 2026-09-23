@@ -203,4 +203,13 @@
   <data name="TagList_ConfirmText" xml:space="preserve">
     <value>Retirer {0} de cet enregistrement ? La ligne de liaison est supprimée ; l'étiquette est conservée.</value>
   </data>
+  <data name="SampleData_Name" xml:space="preserve">
+    <value>Données d'exemple (démo uniquement)</value>
+  </data>
+  <data name="SampleData_Desc" xml:space="preserve">
+    <value>Un document JSON d'étiquettes que le contrôle affiche à la place de celles de l'enregistrement. Laissez vide sur un vrai formulaire.</value>
+  </data>
+  <data name="TagList_NoticeSample" xml:space="preserve">
+    <value>Les données d'exemple n'ont pas pu être lues : aucune étiquette n'est affichée.</value>
+  </data>
 </root>

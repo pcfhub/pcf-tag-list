@@ -203,4 +203,13 @@
   <data name="TagList_ConfirmText" xml:space="preserve">
     <value>{0} aus diesem Datensatz entfernen? Die Verknüpfungszeile wird gelöscht; das Tag selbst bleibt erhalten.</value>
   </data>
+  <data name="SampleData_Name" xml:space="preserve">
+    <value>Beispieldaten (nur Demo)</value>
+  </data>
+  <data name="SampleData_Desc" xml:space="preserve">
+    <value>Ein JSON-Dokument mit Tags, das das Steuerelement anstelle der Tags des Datensatzes anzeigt. Auf einem echten Formular leer lassen.</value>
+  </data>
+  <data name="TagList_NoticeSample" xml:space="preserve">
+    <value>Die Beispieldaten konnten nicht gelesen werden, daher werden keine Tags angezeigt.</value>
+  </data>
 </root>

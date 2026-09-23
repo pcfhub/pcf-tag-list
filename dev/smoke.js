@@ -119,7 +119,18 @@ const LOOKUP_SUBGRID = {
     relationshipFilter: { column: 'cll_account', id: fixture.PARENT },
 };
 
-const INPUTS = { allowCreate: true, allowNewTags: true, maxVisible: 12, primaryNameField: null, parentLookupField: null, relationshipName: null };
+const INPUTS = { allowCreate: true, allowNewTags: true, maxVisible: 12, primaryNameField: null, parentLookupField: null, relationshipName: null, sampleData: null };
+
+/*
+ * The hub's demo, as far as this control can tell: no record, no organisation
+ * URL, a Web API that rejects every call and a lookup dialog that resolves
+ * `[]` (read from the hub's harness source, 2026-09-23). The presets are the
+ * ones pcfhub.json ships, so what is asserted below is what a visitor gets.
+ */
+const HUB = { page: false, webApiFails: true, lookupPick: null };
+const HUB_PRESETS = JSON.parse(fs.readFileSync(path.join(root, 'pcfhub.json'), 'utf8')).demo.presets;
+const preset = (slug) => HUB_PRESETS.find((entry) => entry.slug === slug);
+const bindPreset = (slug) => bind({ ...HUB, inputs: preset(slug).props });
 
 /**
  * Bind a fresh control to a fresh view and render until it settles.
@@ -589,6 +600,147 @@ if (typeof registration.ctor !== 'function') {
     const searchFault = await failing.service().search('a').then(() => null, (error) => error);
 
     check('a refused search turns the platform\'s plain-object rejection into an Error', searchFault instanceof Error && searchFault.message === 'The records could not be retrieved.', searchFault && searchFault.message);
+
+    /* ------------------------------------------- the sample route (the demo) */
+
+    // One block, so the names below cannot collide with the live route's.
+    {
+        {
+            const inputs = [...fs.readFileSync(path.join(root, 'TagList', 'ControlManifest.Input.xml'), 'utf8').matchAll(/<property name="(\w+)"[^>]*usage="input"/g)].map(
+                (match) => match[1],
+            );
+            const missing = HUB_PRESETS.map((entry) => [entry.slug, inputs.filter((name) => !Object.hasOwn(entry.props, name))]).filter(([, names]) => names.length > 0);
+
+            // The harness hands a default-value over as its XML string, so an unset TwoOptions "false" arrives true.
+            check('every hub preset sets every input', inputs.length > 0 && missing.length === 0, JSON.stringify(missing));
+        }
+
+        for (const entry of HUB_PRESETS) {
+            const view = bindPreset(entry.slug);
+            const resolved = await ready(view);
+
+            check(`preset "${entry.slug}" is a document the parser reads`, !(resolved.binding.kind === 'unknown' && resolved.binding.reason === 'badSample'), resolved.binding.kind);
+        }
+
+        const demo = bindPreset('default');
+
+        await ready(demo);
+
+        const sampleDoc = JSON.parse(preset('default').props.sampleData);
+        const nameOf = (id) => sampleDoc.tags.find((tag) => tag.id === id).name;
+        const shown = () => demo.service().listing(demo.dataset()).chips.map((chip) => chip.label);
+
+        check("the demo draws the sample's chips, not the view's rows", shown().join('|') === sampleDoc.linked.map(nameOf).join('|'), shown().join('|'));
+        check('in the markup, with their colours', demo.html().includes('>Priority<') && demo.html().includes('--taglist-chip-accent:#DC2626'), demo.html().slice(0, 300));
+        check('offers the add box and a remove per chip', demo.html().includes('role="combobox"') && count(demo.html(), 'TagList-chip-remove"') === sampleDoc.linked.length);
+        check('and no Browse, whose dialog the demo answers with []', demo.props().canBrowse === false);
+        check('says nothing about a missing record', !demo.html().includes(english('TagList_NoticeNoParent')));
+
+        const sampleFound = await demo.service().search('re');
+
+        check(
+            "a search follows the live rules: contains, any case, by name, the record's own left out",
+            sampleFound.map((tag) => tag.name).join('|') === 'Healthcare|Referral|Retail',
+            sampleFound.map((tag) => tag.name).join('|'),
+        );
+
+        await demo.service().attach(sampleFound.find((tag) => tag.name === 'Referral'));
+        demo.settle();
+
+        check('linking a found tag adds its chip', shown().includes('Referral') && demo.html().includes('>Referral<'), shown().join('|'));
+        check('and takes it out of the next search', !(await demo.service().search('refer')).some((tag) => tag.name === 'Referral'));
+
+        await demo.service().create('Trade show 2026');
+        demo.settle();
+
+        check('creating adds a tag and links it', shown().includes('Trade show 2026'));
+
+        const removed = await demo.service().remove('t1', 'Priority', { title: 't', text: 't' });
+
+        demo.settle();
+
+        check('unlinking removes the chip', removed === true && !shown().includes('Priority'), shown().join('|'));
+        check('and keeps the tag, so a search finds it again', (await demo.service().search('prio')).some((tag) => tag.name === 'Priority'));
+
+        demo.settle();
+        check('the links survive a re-render with the same document', shown().includes('Referral') && shown().includes('Trade show 2026'));
+
+        demo.props().onOpenTag('t2');
+
+        check('opening a sample chip reports it through the output', demo.outputs().selectedTagId === 't2');
+        check(
+            'and the whole sample route asks the platform for nothing — no Web API, no fetch, no refresh, no navigation',
+            !demo.calls().some((call) => /^(webAPI\.|fetch|refresh|openDatasetItem|utils\.lookupObjects)/.test(call)),
+            demo.calls().join(' '),
+        );
+
+        demo.handle.setInput('sampleData', preset('many-tags').props.sampleData);
+        demo.settle();
+        await ready(demo);
+
+        check(
+            'a new document — a preset switch — starts from its own links',
+            !shown().includes('Trade show 2026') && shown().includes('Priority') && shown().length === JSON.parse(preset('many-tags').props.sampleData).linked.length,
+            shown().join('|'),
+        );
+
+        // The hub keeps the control mounted across a preset switch; a new key is what drops the last preset's error line.
+        check('and remounts the component, so no error or typed text carries over', demo.driven.element.key === preset('many-tags').props.sampleData.trim());
+
+        const crowded = bindPreset('many-tags');
+
+        await ready(crowded);
+        check('more tags than Max visible collapse into +N more', crowded.html().includes(english('TagList_MoreButton').replace('{0}', '9')), crowded.html().slice(-400));
+
+        const owned = bindPreset('one-to-many');
+
+        await ready(owned);
+
+        const ownedFound = (await owned.service().search('a')).map((tag) => tag.name);
+
+        check('one-to-many leaves out tags another record owns', ownedFound.length > 0 && !ownedFound.some((name) => ['EMEA', 'APAC', 'Americas'].includes(name)), ownedFound.join('|'));
+
+        const refused = bindPreset('refused');
+
+        await ready(refused);
+
+        const refusedWith = await refused.service().remove('t1', 'Priority', { title: 't', text: 't' }).then(() => null, (error) => error);
+
+        check("a refused unlink rejects with the sample's sentence", refusedWith instanceof Error && /prvAppendTo/.test(refusedWith.message), String(refusedWith));
+        check('and the chip stays', refused.service().listing(refused.dataset()).chips.some((chip) => chip.label === 'Priority'));
+
+        const torn = bindPreset('ambiguous');
+
+        await ready(torn);
+        check(
+            "an ambiguous sample shows the maker's notice with the names, and no add box or removes",
+            torn.html().includes('cll_Account_cll_Tag_cll_Tag, cll_account_cll_tag') && !torn.html().includes('role="combobox"') && !torn.html().includes('TagList-chip-remove"'),
+            torn.html(),
+        );
+
+        for (const [label, text] of [
+            ['text that is not JSON', '{ tags: nope'],
+            ['JSON without a tag table', '{"linked":["t1"]}'],
+            ['a binding the control does not know', '{"binding":"sideways","tags":[]}'],
+        ]) {
+            const broken = bind({ ...HUB, inputs: { sampleData: text } });
+            const result = await ready(broken);
+
+            check(
+                `${label} is the named state, not a blank control or a throw`,
+                result.binding.kind === 'unknown' && result.binding.reason === 'badSample' && broken.html().includes(english('TagList_NoticeSample')),
+                result.binding.kind,
+            );
+        }
+
+        const blank = bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N, sampleData: '   ' } });
+
+        await ready(blank);
+        check(
+            'a blank sampleData on a form is the live route, untouched — and the component key never moves',
+            blank.service().isSample() === false && blank.props().canBrowse === true && blank.ids().length > 0 && blank.driven.element.key === '',
+        );
+    }
 
     /* --------------------------------------------------- what destroy owes */
 

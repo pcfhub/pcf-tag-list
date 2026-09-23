@@ -55,9 +55,11 @@ English, Spanish, French, German and Japanese.
 
 ## On the hub
 
-The demo runs at **limited** fidelity. It has no Dataverse behind it and no record
-to attach tags to, so it shows the chips and the notice the control shows off a
-saved record. Search, Browse and linking need a real form.
+The demo runs at **mocked** fidelity. It has no Dataverse behind it, so each
+preset carries a small tag table in the `sampleData` input and the control
+searches, links, creates and unlinks against that: the same code a form runs,
+with a different source. Browse needs a model-driven app and is not offered
+there. `sampleData` is for the demo only; leave it blank on a form.
 
 ## Install
 

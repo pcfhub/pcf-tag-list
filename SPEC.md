@@ -137,6 +137,31 @@ simulated, a real mouse click on an option links it exactly once and a click on
 No React warnings. The suite
 renders without layout and sees none of this.
 
+## The demo's sample route (0.4.0)
+
+The hub's harness, read from its source (`resources/js/demo-harness/context`,
+2026-09-23): no `contextInfo`, no `page`, a `webAPI` whose every method
+rejects, `lookupObjects` resolving `[]`, `openConfirmDialog` as
+`window.confirm`, and a dataset rebuilt from `demo/tags.json` on every render,
+so `refresh()` changes nothing. 0.3.x therefore demoed as its no-record notice.
+
+0.4.0 adds a `sampleData` input (the skill's sample-data route). Two things
+this control needed that `pcf-hierarchy-view` and `pcf-audit-history` did not:
+
+- **The chips come from the sample, not the dataset.** They are dataset rows
+  on a form, and the harness's dataset cannot change, so a link on the sample
+  route would otherwise do nothing visible. `service.listing()` is the one
+  place that chooses; the component never asks which route it is on.
+- **The component is keyed by the document.** The hub switches presets on a
+  mounted control, and in its harness the previous preset's refusal line
+  stayed on screen after a switch. A new key remounts; on a form the key is
+  `''` and never moves.
+
+Checked in the hub's own harness (its Vite dev server, opened top-level so the
+page answers its own `harness:init`): every preset renders styled, a
+suggestion is clicked, a tag is created with Enter and one unlinked, a preset
+switch starts clean, and the dark theme applies.
+
 ## Design decisions worth keeping
 
 - **`allowCreate` kept its 0.2.x meaning** (false hides the add box, the
@@ -201,3 +226,5 @@ the window to 320px.
 - 0.2.x removed a chip with `deleteRecord` on the target table. On a native
   many-to-many that deleted the tag everywhere. Promoted to the skill's
   *`deleteRecord`, beyond the N:N trap*; fixed in 0.3.0.
+- 0.3.x demoed on the hub at `limited`, as its no-record notice. 0.4.0's
+  `sampleData` brought it back to `mocked`.

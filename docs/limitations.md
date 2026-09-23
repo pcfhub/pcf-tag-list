@@ -45,8 +45,13 @@ for adding.
 There is no undo in the control. A tag removed by mistake is attached again
 from the search box, since the tag itself still exists.
 
-## The demo on this page cannot search
+## The demo on this page plays against sample data
 
-The hub's demo has no Dataverse behind it: it shows the chips and says to save
-the record, which is what the control shows anywhere it has no record to work
-on.
+The hub's demo has no Dataverse behind it, so each preset hands the control a
+small tag table in the **Sample data** property, and search, linking, creating
+and unlinking run against that instead. Everything else is the control's own
+code. Browse is not offered there, because the lookup dialog it opens exists
+only in a model-driven app, and nothing is saved: changes last until the
+preset changes or the page reloads.
+
+On a form, leave **Sample data** blank.

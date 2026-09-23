@@ -203,4 +203,13 @@
   <data name="TagList_ConfirmText" xml:space="preserve">
     <value>このレコードから {0} を削除しますか? リンク行は削除されますが、タグ自体は残ります。</value>
   </data>
+  <data name="SampleData_Name" xml:space="preserve">
+    <value>サンプル データ (デモ専用)</value>
+  </data>
+  <data name="SampleData_Desc" xml:space="preserve">
+    <value>レコードのタグの代わりにコントロールが表示するタグの JSON ドキュメント。実際のフォームでは空欄のままにしてください。</value>
+  </data>
+  <data name="TagList_NoticeSample" xml:space="preserve">
+    <value>サンプル データを読み取れなかったため、タグは表示されません。</value>
+  </data>
 </root>

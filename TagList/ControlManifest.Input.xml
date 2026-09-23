@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="PCFHub" constructor="TagList" version="0.3.3" display-name-key="TagList_Name" description-key="TagList_Desc" control-type="virtual" >
+  <control namespace="PCFHub" constructor="TagList" version="0.4.0" display-name-key="TagList_Name" description-key="TagList_Desc" control-type="virtual" >
     <external-service-usage enabled="false">
     </external-service-usage>
 
@@ -35,6 +35,19 @@
          many-to-many with it (the probe's did), and a value set for 0.2.x's
          create path would then pick the lookup under an N:N subgrid. -->
     <property name="parentLookupField" display-name-key="ParentLookupField_Name" description-key="ParentLookupField_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+
+    <!-- The hub's demo, and nothing else. Its harness has no record, no
+         organisation URL and a Web API that rejects every call, so the live
+         route shows only a notice there. Each demo preset puts a JSON
+         document of tags here and the control links, unlinks, searches and
+         creates against that instead (sample.ts). Blank on every real form,
+         where it changes nothing.
+
+           { "binding": "manyToMany",
+             "tags": [ { "id": "t1", "name": "Priority", "color": "#d13438" } ],
+             "linked": [ "t1" ] }
+    -->
+    <property name="sampleData" display-name-key="SampleData_Name" description-key="SampleData_Desc" of-type="Multiple" usage="input" required="false" />
 
     <property name="selectedTagId" display-name-key="SelectedTagId_Name" description-key="SelectedTagId_Desc" of-type="SingleLine.Text" usage="output" />
 
