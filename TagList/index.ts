@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { IInputs, IOutputs } from './generated/ManifestTypes';
 import { TagListControl, IProps } from './components/TagListControl';
+// THROWAWAY: the 0.2.2 probe build. Remove with probe.ts before 0.3.0.
+import { installProbe } from './probe';
 
 /**
  * A virtual (React) dataset control. Unlike StandardControl, `updateView`
@@ -19,6 +21,7 @@ export class TagList implements ComponentFramework.ReactControl<IInputs, IOutput
     }
 
     public updateView(context: ComponentFramework.Context<IInputs>): React.ReactElement {
+        installProbe(context); // THROWAWAY: 0.2.2 probe
         const dataset = context.parameters.tags;
 
         const props: IProps = {
