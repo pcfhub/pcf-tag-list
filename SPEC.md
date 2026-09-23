@@ -177,33 +177,32 @@ upward only with at least 160px above.
 - **The chip colour is a lower-case custom property**, `--taglist-chip-accent`:
   React 16.8's server renderer hyphenates capitals in a custom property name.
 
+## Confirmed on a real form after 0.5.0 (2026-09-23)
+
+Reported from the form, not measured request by request:
+
+- **A one-to-many subgrid**: attaching binds the lookup, removing clears it
+  (`null`), and the search offers only tags no other record owns.
+- **The linked-ids read** (`<set>(<id>)/<nav>?$select=…`): suggestions leave out
+  tags the record has on pages the subgrid has not loaded.
+- **Browse**: `lookupObjects` with `allowMultiSelect`, opening on what was typed
+  (`searchText`), and the one-to-many `filters` condition.
+- **Load more**: bare `loadNextPage()` on this control's subgrid.
+- **The suggestion list** positioned absolute in its body-level layer.
+- **The dark theme**, on both a one-to-many and a many-to-many subgrid: chips,
+  the add box, Browse and +N more follow the host's dark tokens. Dark mode is
+  not a supported model-driven setting yet (Microsoft Learn, *Modern,
+  refreshed look*), so this was seen through the host's dark theme flag.
+
 ## Not verified
 
-- **The linked-ids read** (`<set>(<id>)/<nav>?$select=…`) on a real form. Standard
-  Web API, same URL family as P3, not called by the probe.
-- **A one-to-many subgrid on a real form**: the bind, the `null` clear, and the
-  `_<column>_value eq null` search filter. The bind and clear were measured by
-  `pcf-data-table` 0.5.0 on another table; this control has not run them.
 - **The junction-view signal.** `linkRows` is recognised by the label column's
   name containing `.` (a linked table's column). Unmeasured; no junction subgrid
   was probed.
-- **Browse** on a real form: `lookupObjects` with `allowMultiSelect`, `searchText`
-  (0.3.2: what is typed carries into the dialog — suggested from testing on the
-  form; the reference says Unified Interface only) and, for a one-to-many, the
-  `filters` FetchXML condition. The harness shows the call carries the trimmed
-  term; that the dialog opens *searching* it is the form's to show.
 - **A 403** for a user without Append / Append To — the message shape is the
   rig's, not the server's.
-- **Load more** accumulating on this control's subgrid (bare `loadNextPage()`,
-  after `pcf-compact-list`, which also has not seen it on a form).
-- **The stylesheet on a real form**, including the dark theme and forced
-  colours. Checked in `dev/harness.html` with `getComputedStyle` only.
-- **The absolute list on the real form** (0.5.0; fixed from 0.3.1 to 0.4.0):
-  overlaid, clickable, themed, following the field on scroll, and flipping
-  upward near the bottom of the form.
-- **The lifted list on the real form** (0.3.2): overlaid, clickable, themed,
-  and following the field when the form scrolls. The form's own scroll container
-  is an ancestor, so the capture-phase scroll listener should see it.
+- **Forced colours (high contrast) on a real form.** Checked in
+  `dev/harness.html` with `getComputedStyle` only.
 
 ## Screenshots
 
