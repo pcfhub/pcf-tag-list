@@ -234,10 +234,12 @@ export class TagService {
     }
 
     /**
-     * The platform's own lookup dialog, multi-select. Resolves how many tags
-     * were attached — `0` for a cancel, which is a resolve with `[]`.
+     * The platform's own lookup dialog, multi-select, opened on whatever the user
+     * had already typed (`searchText`) so Browse continues the search rather
+     * than starting over. Resolves how many tags were attached — `0` for a
+     * cancel, which is a resolve with `[]`.
      */
-    async browse(): Promise<number> {
+    async browse(searchText = ''): Promise<number> {
         const { platform, dataset } = this.read();
         const { binding } = await this.resolve();
         const table = dataset.getTargetEntityType();
@@ -251,6 +253,8 @@ export class TagService {
                 entityTypes: [table],
                 defaultEntityType: table,
                 allowMultiSelect: true,
+                // Sent only when there is a term: an empty one would open the dialog on a blank search either way.
+                ...(searchText.trim() !== '' ? { searchText: searchText.trim() } : {}),
                 filters:
                     binding.kind === 'oneToMany'
                         ? [

@@ -40,6 +40,8 @@ export interface PickOptions {
     defaultEntityType: string;
     allowMultiSelect: boolean;
     filters?: { filterXml: string; entityLogicalName: string }[];
+    /** The dialog's opening search term — Unified Interface only, per the `lookupObjects` reference. */
+    searchText?: string;
 }
 
 export interface Platform {

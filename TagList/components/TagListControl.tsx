@@ -285,8 +285,19 @@ export function TagListControl(props: IProps): React.ReactElement {
         setError(null);
         setAdding(true);
         service
-            .browse()
-            .catch(report('TagList_ErrorAdd', getString('TagList_Browse')))
+            // What is in the box carries into the dialog's search.
+            .browse(text)
+            .then(
+                (attached) => {
+                    // Picked something: the box has done its job, as a pick from the list does.
+                    // Cancelled: keep the text, the user may go on typing.
+                    if (attached > 0 && mounted.current) {
+                        setText('');
+                        setResults([]);
+                    }
+                },
+                report('TagList_ErrorAdd', getString('TagList_Browse')),
+            )
             .then(() => mounted.current && setAdding(false));
     };
 

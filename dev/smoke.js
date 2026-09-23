@@ -476,6 +476,21 @@ if (typeof registration.ctor !== 'function') {
 
     check('Browse opens the platform lookup, multi-select, on the tag table', pickCall.includes('"allowMultiSelect":true') && pickCall.includes('cll_tag'), pickCall);
     check('and links what was picked, braced and upper-cased as the platform hands it', picked === 1 && linked(picking.handle, fixture.PARENT, fixture.guid(15)));
+    check('with no typed term, the dialog opens on no search term at all', !pickCall.includes('searchText'), pickCall);
+
+    /*
+     * Found testing on the form, 2026-09-23: type "pow", press Browse, and the
+     * dialog opened blank. lookupObjects takes searchText (Unified Interface
+     * only, per its reference), so what is in the box carries into the dialog.
+     */
+    const carrying = bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N } });
+
+    await ready(carrying);
+    await carrying.service().browse('  pow ');
+
+    const carried = carrying.calls().find((call) => call.startsWith('utils.lookupObjects')) || '';
+
+    check('Browse opens the dialog on what was typed, trimmed', carried.includes('"searchText":"pow"'), carried);
 
     const cancelling = bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N } });
 

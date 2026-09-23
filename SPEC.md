@@ -147,8 +147,11 @@ renders without layout and sees none of this.
 - **The junction-view signal.** `linkRows` is recognised by the label column's
   name containing `.` (a linked table's column). Unmeasured; no junction subgrid
   was probed.
-- **Browse** on a real form: `lookupObjects` with `allowMultiSelect` and, for a
-  one-to-many, the `filters` FetchXML condition.
+- **Browse** on a real form: `lookupObjects` with `allowMultiSelect`, `searchText`
+  (0.3.2: what is typed carries into the dialog — suggested from testing on the
+  form; the reference says Unified Interface only) and, for a one-to-many, the
+  `filters` FetchXML condition. The harness shows the call carries the trimmed
+  term; that the dialog opens *searching* it is the form's to show.
 - **A 403** for a user without Append / Append To — the message shape is the
   rig's, not the server's.
 - **Load more** accumulating on this control's subgrid (bare `loadNextPage()`,
