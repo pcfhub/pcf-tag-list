@@ -106,6 +106,11 @@ export function TagListControl(props: IProps): React.ReactElement {
     const rootRef = React.useRef<HTMLDivElement>(null);
     const listRef = React.useRef<HTMLUListElement>(null);
     const lowered = React.useRef<(() => void) | null>(null);
+    /** What a press and a hover on the lifted list do, refreshed every render so the listeners never hold stale options. */
+    const pointer = React.useRef<{ pick: (index: number) => void; hover: (index: number) => void }>({
+        pick: () => undefined,
+        hover: () => undefined,
+    });
     const [placement, setPlacement] = React.useState<Placement>({ kind: 'pending' });
     const wantsList = open && text.trim() !== '';
 
@@ -171,12 +176,52 @@ export function TagListControl(props: IProps): React.ReactElement {
      * overlaid (placement.ts has the two measurements). Lifted once it exists —
      * the add box arrives after the binding resolves — and the layer removed
      * when the list goes away with it, or with the control.
+     *
+     * **Its pointer events are plain DOM listeners, not React props.** 0.3.2
+     * used onMouseDown on each option, and on the real form nothing could be
+     * clicked (2026-09-23): React 17+ delegates events at the root container
+     * the platform rendered into, and a node moved to <body> is outside it.
+     * React 16 delegates at document, which is why the harness — React 16 —
+     * clicked fine. A listener on the list itself works under both.
      */
     React.useEffect(() => {
         const list = listRef.current;
 
         if (list && lowered.current === null) {
-            lowered.current = liftToBody(list);
+            const indexOf = (target: EventTarget | null): number => {
+                const item = target instanceof Element ? target.closest('[data-index]') : null;
+
+                return item ? Number(item.getAttribute('data-index')) : -1;
+            };
+            // mousedown, not click: click lands after the input's blur has closed the list.
+            // Prevented anywhere in the list, so a press on padding or a hint keeps focus too.
+            const down = (event: MouseEvent): void => {
+                event.preventDefault();
+
+                const index = indexOf(event.target);
+
+                if (index >= 0) {
+                    pointer.current.pick(index);
+                }
+            };
+            const over = (event: MouseEvent): void => {
+                const index = indexOf(event.target);
+
+                if (index >= 0) {
+                    pointer.current.hover(index);
+                }
+            };
+
+            list.addEventListener('mousedown', down);
+            list.addEventListener('mouseover', over);
+
+            const lower = liftToBody(list);
+
+            lowered.current = () => {
+                list.removeEventListener('mousedown', down);
+                list.removeEventListener('mouseover', over);
+                lower();
+            };
         } else if (!list && lowered.current !== null) {
             lowered.current();
             lowered.current = null;
@@ -275,6 +320,17 @@ export function TagListControl(props: IProps): React.ReactElement {
         (option.kind === 'tag' ? service.attach(option.tag) : service.create(option.name))
             .catch(report('TagList_ErrorAdd', name))
             .then(() => mounted.current && setAdding(false));
+    };
+
+    pointer.current = {
+        pick: (index) => {
+            const option = options[index];
+
+            if (option) {
+                choose(option);
+            }
+        },
+        hover: (index) => setActive(index),
     };
 
     const browse = (): void => {
@@ -463,17 +519,12 @@ export function TagListControl(props: IProps): React.ReactElement {
                                 <li
                                     key={option.kind === 'tag' ? option.tag.id : `create:${option.name}`}
                                     id={optionId(index)}
+                                    data-index={index}
                                     role="option"
                                     aria-selected={index === active}
                                     className={`TagList-option${index === active ? ' TagList-option--active' : ''}${
                                         option.kind === 'create' ? ' TagList-option--create' : ''
                                     }`}
-                                    // mousedown, not click: click lands after the input's blur has closed the list.
-                                    onMouseDown={(event) => {
-                                        event.preventDefault();
-                                        choose(option);
-                                    }}
-                                    onMouseEnter={() => setActive(index)}
                                 >
                                     {option.kind === 'tag'
                                         ? option.tag.name

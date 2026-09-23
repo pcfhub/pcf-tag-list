@@ -91,7 +91,7 @@ writes, and falls back to the loaded chips if the read fails. The suite asserts
 it now (and was mutation-tested against it); it did not before the harness
 showed it.
 
-## What the form found that the harness did not (0.3.0 → 0.3.2)
+## What the form found that the harness did not (0.3.0 → 0.3.3)
 
 Two measurements on the Account form, 2026-09-23, each of which killed a design:
 
@@ -111,16 +111,30 @@ pcf-scripts' `pcfReactPlatformLibraries` flag, and a second bundled copy defeats
 the platform library. `components/placement.ts` has React render the list in
 place and moves that one `<ul>` into a layer at the end of `<body>`, placed
 fixed against the field. Safe because the list is never conditionally
-unmounted (toggled with `hidden`), so React only edits its children; clickable
-because React 16 delegates events at `document`; themed because the control
+unmounted (toggled with `hidden`), so React only edits its children; themed because the control
 copies its resolved `--TagList-*` properties onto the layer, which sits outside
 the FluentProvider that publishes the tokens.
+
+**Then the form found a third (0.3.2 → 0.3.3): the options could not be
+clicked.** The list floated, stayed attached on scroll, and Browse carried the
+text — all confirmed on the form — and a press on an option or "Create" did
+nothing. 0.3.2 used React `onMouseDown` on each option, relying on React 16
+delegating events at `document`. The platform's React on this form delegates at
+the control's own container, as React 17+ does, and the list had been moved out
+of it; the harness ran React 16, where it worked. 0.3.3 puts plain `mousedown`
+and `mouseover` listeners on the list itself, reading the option from a
+`data-index`, with no React pointer handlers left to fire twice. The harness
+now has that host as a switch, on by default: it stops pointer events from the
+lifted layer before `document`, and was checked to do so.
 
 Checked in `dev/harness.html` with both form conditions on (`overflow: hidden`
 with a tight height, and a transformed ancestor): the list is in the body layer,
 visible at its centre point, the section grows by 0px, a click on "Dataverse"
 links it, the theme is copied, one layer survives four remounts, and a real
-unmount leaves no layer and nothing in `<body>`. No React warnings. The suite
+unmount leaves no layer and nothing in `<body>`. With React 17+ delegation
+simulated, a real mouse click on an option links it exactly once and a click on
+"Create" creates and links; with it off (React 16), one click is still one link.
+No React warnings. The suite
 renders without layout and sees none of this.
 
 ## Design decisions worth keeping

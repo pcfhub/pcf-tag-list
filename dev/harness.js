@@ -167,6 +167,27 @@
         surface.style.maxHeight = clip ? '150px' : '';
         surface.style.transform = trap ? 'translateZ(0)' : '';
 
+        /*
+         * This page runs React 16, which hears every event at `document`, so a
+         * React handler on a node moved to <body> fires here — and did not on
+         * the real form, whose React delegates at the control's own container
+         * (0.3.2, 2026-09-23: the options could not be clicked). Stopping
+         * pointer events from the lifted layer before they reach `document`
+         * is that host, as far as React can tell.
+         */
+        window.__tagListReact17 = document.getElementById('harness-react17').checked;
+
+        if (!window.__tagListReact17Installed) {
+            window.__tagListReact17Installed = true;
+            ['mousedown', 'mouseover', 'click'].forEach(function (type) {
+                document.body.addEventListener(type, function (event) {
+                    if (window.__tagListReact17 && event.target instanceof Element && event.target.closest('.TagList-layer')) {
+                        event.stopPropagation();
+                    }
+                });
+            });
+        }
+
         handle = host.createHost(fixture, options());
         container = document.getElementById('harness-root');
 
