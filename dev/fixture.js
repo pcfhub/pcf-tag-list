@@ -1,32 +1,27 @@
 /*
- * The view the dev harness binds: columns and records, chosen for the edges.
+ * The tables the dev rig answers from, shaped after the probe's environment
+ * (SPEC.md, 2026-09-23): an account, a `cll_tag` table, a native many-to-many
+ * between them, **and** a `cll_account` lookup from tag to account — the pair
+ * of relationships that makes the binding ambiguous until a maker names one.
  *
  * **This is not `demo/tags.json`.** That one is the hub's demo fixture and
  * exists to look like a working control on a public page. This one exists to
- * break things.
+ * break things. Kept on purpose:
  *
- * The single most important thing in this file is that **`name` and `alias` are
- * different strings on every column.**
+ *   - **`name` and `alias` differ on every column.** `alias` is the manifest's
+ *     role name (`labelField`), `name` the column the maker bound; a fixture
+ *     where they agree certifies a control reading the wrong one (0.1.x did).
+ *   - **a tag with no colour**, and an empty string, the two values that catch
+ *     a renderer treating falsy as absent;
+ *   - **a label long enough to overflow**;
+ *   - **fourteen linked tags at the rig's page size of five**, so `maxVisible`
+ *     has something to hide and there are three pages to load;
+ *   - **tags linked to nothing**, for a search to find and a pick to attach;
+ *   - **a quote in a name**, which a search has to escape as `''`.
  *
- * `alias` is the property-set's role name from the manifest — `labelField`,
- * `colorField` — and it is fixed. `name` is the column the maker actually
- * pointed that role at, and it is what `getFormattedValue()` takes. A fixture
- * that sets both to the same string passes whichever of the two the control
- * reads, so it certifies a control that looks up `getFormattedValue('labelField')`
- * — which finds nothing on a real form and renders every chip blank, silently.
- * The control's own components carry a comment about this; the fixture is where
- * it is enforced.
- *
- * Also here on purpose:
- *
- *   - **a record with no colour**, since `colorField` is an optional role and
- *     a view that omits it is the common case;
- *   - **an empty string and a null in the colour column**, the two values that
- *     catch a renderer treating falsy as absent;
- *   - **a label long enough to overflow**, because nobody finds out until a
- *     customer types one;
- *   - **fourteen records**, so `maxVisible: 12` has something to hide and the
- *     overflow affordance has a number to show.
+ * Every tag appears twice from one list: as a dataset row (what a subgrid can
+ * show once linked) and as a `tables` row (what a search reads), so a tag found
+ * by a search is a tag the subgrid can show after the link.
  *
  * Loaded by `harness.html` in a browser and by `smoke.js` in Node, so it
  * assigns both ways and depends on neither.
@@ -47,70 +42,104 @@
 })(typeof window !== 'undefined' ? window : null, function () {
     'use strict';
 
-    function tag(id, label, colour) {
-        return {
-            id: id,
-            values: {
-                // The real column names, which is what getFormattedValue takes.
-                new_tagname: label,
-                new_tagcolour: colour,
-                name: label,
-            },
-        };
+    var PARENT = 'a0c0ffee-0000-4000-8000-000000000001';
+    var OTHER = 'a0c0ffee-0000-4000-8000-000000000002';
+    var N2N = 'cll_Account_cll_Tag_cll_Tag';
+
+    function guid(n) {
+        return 'bada55ed-0000-4000-8000-' + String(n).padStart(12, '0');
     }
 
+    /*
+     * [label, colour, linked over the N:N?, owner through the lookup]
+     */
+    var TAGS = [
+        ['Feature', '#7C3AED', true, PARENT],
+        ['Bug', '#DC2626', true, PARENT],
+        ['Enhancement', '#2563EB', true, null],
+        ['Documentation', '#059669', true, null],
+        ['Needs triage', '#D97706', true, null],
+        ["Won't fix", '', true, null],
+        ['Security', null, true, null],
+        ['Performance', '#0891B2', true, null],
+        ['Accessibility', '#9333EA', true, null],
+        ['A label long enough to overflow any chip that forgot to truncate it', '#6B7280', true, null],
+        ['Regression', '#BE123C', true, null],
+        ['Customer', '#15803D', true, null],
+        ['Backlog', '#64748B', true, null],
+        ['Design', '#DB2777', true, null],
+        // Linked to nothing: what a search finds and a pick attaches.
+        ['Power Apps', '#742774', false, null],
+        ['Dataverse', '#088142', false, null],
+        ["O'Brien", '#1D4ED8', false, null],
+        ['Black', '#111827', false, null],
+        // Owned by another account: a one-to-many search must not offer it.
+        ['Taken elsewhere', '#A16207', false, OTHER],
+    ];
+
+    function owner(id) {
+        return id === null
+            ? null
+            : { id: { guid: id }, etn: 'account', name: id === PARENT ? 'Adventure Works (sample)' : 'Contoso' };
+    }
+
+    var records = TAGS.map(function (tag, index) {
+        return {
+            id: guid(index + 1),
+            values: {
+                cll_tagname: tag[0],
+                cll_tagcolour: tag[1],
+                cll_account: owner(tag[3]),
+            },
+        };
+    });
+
     return {
-        targetEntityType: 'new_tag',
-        title: 'Related tags',
+        PARENT: PARENT,
+        OTHER: OTHER,
+        N2N: N2N,
+        guid: guid,
 
-        /*
-         * `order` is not the array order, on purpose: a view hands its columns
-         * over in whatever order it likes and carries the intended position in
-         * `order`.
-         *
-         * `alias` is the manifest's role name. `name` is the column behind it.
-         * They differ here because on a real form they differ, and a control
-         * that confuses them renders blank chips against a fixture where they
-         * agree.
-         */
+        targetEntityType: 'cll_tag',
+        entitySetName: 'cll_tags',
+        title: 'Tags',
+        primaryNames: { cll_tag: 'cll_tagname' },
+
         columns: [
-            {
-                name: 'new_tagcolour',
-                displayName: 'Colour',
-                dataType: 'SingleLine.Text',
-                alias: 'colorField',
-                order: 1,
-                visualSizeFactor: 80,
-            },
-            {
-                name: 'new_tagname',
-                displayName: 'Tag',
-                dataType: 'SingleLine.Text',
-                alias: 'labelField',
-                order: 0,
-                visualSizeFactor: 160,
-                isPrimary: true,
-            },
+            { name: 'cll_tagcolour', displayName: 'Colour', dataType: 'SingleLine.Text', alias: 'colorField', order: 1, visualSizeFactor: 60 },
+            { name: 'cll_tagname', displayName: 'Name', dataType: 'SingleLine.Text', alias: 'labelField', order: 0, visualSizeFactor: 150 },
         ],
 
-        records: [
-            tag('t1', 'Priority', '#D13438'),
-            tag('t2', 'Follow up', '#0F6CBD'),
-            tag('t3', 'Renewal', '#0E700E'),
-            // No colour at all: the role is optional and plenty of views omit it.
-            tag('t4', 'Escalated', null),
-            // Empty rather than absent — the other value a falsy check swallows.
-            tag('t5', 'Onboarding', ''),
-            tag('t6', 'Contract review pending legal sign-off and countersignature', '#7A7574'),
-            tag('t7', 'Upsell', '#8764B8'),
-            tag('t8', 'Churn risk', '#C50F1F'),
-            tag('t9', 'Reference', '#0F6CBD'),
-            tag('t10', 'Partner', '#0E700E'),
-            tag('t11', 'Beta', '#7A7574'),
-            tag('t12', 'Enterprise', '#8764B8'),
-            // Thirteen and fourteen exist so maxVisible: 12 has to hide something.
-            tag('t13', 'Support plan', '#D13438'),
-            tag('t14', 'Dormant', null),
+        records: records,
+
+        /* Measured shape, SPEC.md P2: the navigation property is the SchemaName on both sides. */
+        manyToMany: [
+            { schemaName: N2N, entity1: 'cll_tag', entity2: 'account', nav1: N2N, nav2: N2N, intersect: 'cll_account_cll_tag' },
         ],
+
+        links: TAGS.map(function (tag, index) {
+            return tag[2] ? { relationship: N2N, ids: [PARENT, guid(index + 1)] } : null;
+        }).filter(Boolean),
+
+        /* The competing one-to-many, measured on the same table (P2). */
+        relationships: [
+            { schemaName: 'cll_Account_Account_cll_Tag', column: 'cll_account', target: 'account', navigationProperty: 'cll_Account' },
+        ],
+
+        related: {
+            account: {
+                entitySet: 'accounts',
+                rows: [
+                    { id: PARENT, name: 'Adventure Works (sample)' },
+                    { id: OTHER, name: 'Contoso' },
+                ],
+            },
+        },
+
+        tables: {
+            cll_tag: TAGS.map(function (tag, index) {
+                return { cll_tagid: guid(index + 1), cll_tagname: tag[0], _cll_account_value: tag[3] };
+            }),
+        },
     };
 });

@@ -18,3 +18,7 @@
 
 *.pcfproj.user
 *.cdsproj.user
+
+# Not committed: the tag message is where these live, and a stale copy in the
+# tree reads as the current release's notes when it is the previous one's.
+/.release-notes.md
