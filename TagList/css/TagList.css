@@ -266,12 +266,25 @@
 /* ---- suggestions ------------------------------------------------------- */
 
 /*
- * Three placements, chosen in placement.ts against the page: *fixed* against
- * the field (the usual one — it escapes a form section's overflow and paints
- * over the next section), *inline* in the flow when an ancestor would trap a
- * fixed element, and *pending* for the one frame before it is measured. 0.3.0
- * shipped absolute-only, and on a real form the list was clipped out of sight.
+ * The list is lifted into a layer at the end of <body> (placement.ts), which
+ * carries this control's root class so these rules still match, and is placed
+ * fixed against the field — like the platform's own lookup flyout. *pending*
+ * is the one frame before it is measured. Absolute (0.3.0) was clipped on a
+ * real form; fixed inside the form (0.3.1) was trapped and fell back to
+ * pushing the section open.
  */
+.TagList.TagList-layer {
+    display: block;
+    position: static;
+    width: 0;
+    height: 0;
+    gap: 0;
+}
+
+.TagList .TagList-options[hidden] {
+    display: none;
+}
+
 .TagList .TagList-options {
     z-index: 1000;
     max-height: 264px;
@@ -290,11 +303,6 @@
     right: 0;
     left: 0;
     visibility: hidden;
-}
-
-.TagList .TagList-options--inline {
-    position: static;
-    margin-top: 2px;
 }
 
 .TagList .TagList-option,

@@ -1,26 +1,34 @@
 /**
- * Where the suggestion list goes, decided against the page the control is on.
+ * Where the suggestion list goes: a layer at the end of `document.body`, like
+ * the platform's own lookup flyout, placed against the field.
  *
- * **An absolutely positioned list is clipped on a real form.** 0.3.0 shipped
- * one — `position: absolute` under the field — and on an Account form the
- * requests went out, returned 200, and nothing appeared: the subgrid's section
- * ends at the field, so an ancestor with `overflow: hidden` clipped the list,
- * or the next section painted over it (reported 2026-09-23). The dev harness
- * had neither, which is why it looked right there. The skill had already said
- * an inline popup is "not a risk worth taking blind" on a form section.
+ * **Measured twice on a real Account form, 2026-09-23, and each measurement
+ * killed a design:**
  *
- * A portal is the usual way out and not available here: ReactDOM is an external
+ *   - 0.3.0: `position: absolute` under the field. The searches answered 200
+ *     and no list appeared — the section ends at the field and an ancestor
+ *     clipped it. The dev harness had no such ancestor.
+ *   - 0.3.1: `position: fixed`, falling back to in-flow when an ancestor would
+ *     trap a fixed element. The form has one (a `transform`, `filter` or
+ *     `contain` somewhere above the subgrid), so the list went in-flow and
+ *     pushed the section open. It worked, and it was not a dropdown.
+ *
+ * Nothing inside the form's tree can be both unclipped and overlaid, so the
+ * list leaves it. A portal would do that, but ReactDOM is a platform external
  * only behind a pcf-scripts feature flag, and bundling a second copy is what
- * the platform library exists to avoid. So:
+ * the platform library exists to avoid. So React still renders the list, in
+ * place, and the component **moves that one element** into a body-level layer:
  *
- *   - **fixed**, placed against the field's box — escapes every `overflow`
- *     ancestor and paints over later sections, and flips above the field when
- *     there is more room there;
- *   - **inline**, in the flow under the field — when an ancestor would turn
- *     `position: fixed` into "relative to me" (a `transform`, `filter`,
- *     `perspective` or `contain`), which traps a fixed element as surely as
- *     `overflow` clips an absolute one. Taking space in the layout is the one
- *     placement nothing can clip.
+ *   - safe with React 16 because the list is never conditionally unmounted —
+ *     it is always rendered and toggled with `hidden` — so React only ever
+ *     edits its children, which it does wherever the node lives; unmounting
+ *     removes the list's *ancestor* in the form, and the layer is removed
+ *     alongside it;
+ *   - clickable because React 16 delegates events at `document`, which a node
+ *     in `<body>` still bubbles to;
+ *   - themed because the layer is outside the FluentProvider that publishes
+ *     the tokens, so the control copies its own resolved `--TagList-*`
+ *     properties onto it on every open.
  */
 
 export interface FixedPlacement {
@@ -35,7 +43,7 @@ export interface FixedPlacement {
     };
 }
 
-export type Placement = { kind: 'pending' } | { kind: 'inline' } | FixedPlacement;
+export type Placement = { kind: 'pending' } | FixedPlacement;
 
 /** The list's own ceiling, as in the stylesheet. */
 const MAX_HEIGHT = 264;
@@ -43,24 +51,18 @@ const MAX_HEIGHT = 264;
 /** Below this much room under the field, and with more above it, the list opens upward. */
 const FLIP_BELOW = 160;
 
-/** Whether any ancestor makes itself the containing block of a fixed element. */
-export function trapsFixed(element: Element): boolean {
-    for (let node = element.parentElement; node && node !== document.body; node = node.parentElement) {
-        const style = getComputedStyle(node);
-
-        if (
-            (style.transform && style.transform !== 'none') ||
-            (style.filter && style.filter !== 'none') ||
-            (style.perspective && style.perspective !== 'none') ||
-            /paint|layout|strict|content/.test(style.contain || '') ||
-            /transform|filter|perspective/.test(style.willChange || '')
-        ) {
-            return true;
-        }
-    }
-
-    return false;
-}
+/** The control's custom properties the list reads, copied onto the layer so it keeps the host's theme. */
+const THEMED = [
+    '--TagList-foreground',
+    '--TagList-foreground-hint',
+    '--TagList-background',
+    '--TagList-subtle-hover',
+    '--TagList-stroke-focus',
+    '--TagList-shadow',
+    '--TagList-radius',
+    '--TagList-font-size',
+    '--TagList-line-height',
+];
 
 /** The fixed placement for a field's box in a viewport of the given height. */
 export function placeFixed(field: { left: number; top: number; bottom: number; width: number }, viewportHeight: number): FixedPlacement {
@@ -75,4 +77,38 @@ export function placeFixed(field: { left: number; top: number; bottom: number; w
             ? { position: 'fixed', left: field.left, width: field.width, bottom: viewportHeight - field.top + 2, maxHeight: room }
             : { position: 'fixed', left: field.left, width: field.width, top: field.bottom + 2, maxHeight: room },
     };
+}
+
+/**
+ * Move `list` into a new layer at the end of `<body>`, and return the function
+ * that removes the layer. The layer carries the control's root class so the
+ * stylesheet's `.TagList .TagList-options` rules still match.
+ */
+export function liftToBody(list: HTMLElement): () => void {
+    const layer = document.createElement('div');
+
+    layer.className = 'TagList TagList-layer';
+    document.body.appendChild(layer);
+    layer.appendChild(list);
+
+    return () => {
+        if (layer.parentNode) {
+            layer.parentNode.removeChild(layer);
+        }
+    };
+}
+
+/** Copy the control's resolved theme onto the layer, which sits outside the provider that publishes it. */
+export function copyTheme(root: Element, layer: HTMLElement): void {
+    const computed = getComputedStyle(root);
+
+    for (const name of THEMED) {
+        const value = computed.getPropertyValue(name).trim();
+
+        if (value !== '') {
+            layer.style.setProperty(name, value);
+        }
+    }
+
+    layer.style.fontFamily = computed.fontFamily;
 }

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Binding, canAttach, canChange } from '../binding';
 import { Found } from '../platform';
 import { Resolved, TagService } from '../service';
-import { Placement, placeFixed, trapsFixed } from './placement';
+import { copyTheme, liftToBody, Placement, placeFixed } from './placement';
 
 export interface IProps {
     dataset: ComponentFramework.PropertyTypes.DataSet;
@@ -103,6 +103,9 @@ export function TagListControl(props: IProps): React.ReactElement {
     const mounted = React.useRef(true);
     const searchSeq = React.useRef(0);
     const fieldRef = React.useRef<HTMLDivElement>(null);
+    const rootRef = React.useRef<HTMLDivElement>(null);
+    const listRef = React.useRef<HTMLUListElement>(null);
+    const lowered = React.useRef<(() => void) | null>(null);
     const [placement, setPlacement] = React.useState<Placement>({ kind: 'pending' });
     const wantsList = open && text.trim() !== '';
 
@@ -163,23 +166,48 @@ export function TagListControl(props: IProps): React.ReactElement {
     }, [text, service]);
 
     /*
-     * Place the list against the page it is on, and keep it there while it is
-     * open — a fixed list does not move with the form when it scrolls, so it
-     * follows the field instead. See placement.ts for why not absolute.
+     * The list lives in a layer at the end of <body>, like the platform's
+     * lookup flyout: nothing inside the form's tree can be both unclipped and
+     * overlaid (placement.ts has the two measurements). Lifted once it exists —
+     * the add box arrives after the binding resolves — and the layer removed
+     * when the list goes away with it, or with the control.
+     */
+    React.useEffect(() => {
+        const list = listRef.current;
+
+        if (list && lowered.current === null) {
+            lowered.current = liftToBody(list);
+        } else if (!list && lowered.current !== null) {
+            lowered.current();
+            lowered.current = null;
+        }
+    });
+
+    React.useEffect(
+        () => () => {
+            lowered.current?.();
+            lowered.current = null;
+        },
+        [],
+    );
+
+    /*
+     * Place the list against the field while it is open, and keep it there: a
+     * fixed list does not move with the form when it scrolls, so it follows
+     * the field instead.
      */
     React.useEffect(() => {
         const field = fieldRef.current;
+        const list = listRef.current;
 
-        if (!wantsList || !field) {
+        if (!wantsList || !field || !list) {
             setPlacement({ kind: 'pending' });
 
             return undefined;
         }
 
-        if (trapsFixed(field)) {
-            setPlacement({ kind: 'inline' });
-
-            return undefined;
+        if (rootRef.current && list.parentElement) {
+            copyTheme(rootRef.current, list.parentElement);
         }
 
         const place = (): void => setPlacement(placeFixed(field.getBoundingClientRect(), window.innerHeight));
@@ -308,7 +336,7 @@ export function TagListControl(props: IProps): React.ReactElement {
     const optionId = (index: number): string => `${idBase}-option-${index}`;
 
     return (
-        <div className={classes}>
+        <div ref={rootRef} className={classes}>
             <ul className="TagList-chips" aria-label={getString('Tags_DataSet_Name')}>
                 {chips.length === 0 && <li className="TagList-empty">{getString('TagList_Empty')}</li>}
                 {visible.map((chip) => (
@@ -407,17 +435,20 @@ export function TagListControl(props: IProps): React.ReactElement {
                             </button>
                         )}
                     </div>
-                    {listOpen && (
-                        <ul
-                            className={`TagList-options TagList-options--${placement.kind}`}
-                            style={placement.kind === 'fixed' ? placement.style : undefined}
-                            id={listId}
-                            role="listbox"
-                            aria-label={getString('TagList_AddPlaceholder')}
-                        >
-                            {searching && <li className="TagList-hint">{getString('TagList_Searching')}</li>}
-                            {!searching && options.length === 0 && <li className="TagList-hint">{getString('TagList_NoMatches')}</li>}
-                            {options.map((option, index) => (
+                    {/* Always rendered, never conditionally unmounted: it is lifted into a
+                        body-level layer, and React must only ever edit its children. */}
+                    <ul
+                        ref={listRef}
+                        hidden={!listOpen}
+                        className={`TagList-options TagList-options--${placement.kind}`}
+                        style={placement.kind === 'fixed' ? placement.style : undefined}
+                        id={listId}
+                        role="listbox"
+                        aria-label={getString('TagList_AddPlaceholder')}
+                    >
+                            {listOpen && searching && <li className="TagList-hint">{getString('TagList_Searching')}</li>}
+                            {listOpen && !searching && options.length === 0 && <li className="TagList-hint">{getString('TagList_NoMatches')}</li>}
+                            {listOpen && options.map((option, index) => (
                                 <li
                                     key={option.kind === 'tag' ? option.tag.id : `create:${option.name}`}
                                     id={optionId(index)}
@@ -438,8 +469,7 @@ export function TagListControl(props: IProps): React.ReactElement {
                                         : getString('TagList_CreateOption').replace('{0}', option.name)}
                                 </li>
                             ))}
-                        </ul>
-                    )}
+                    </ul>
                 </div>
             )}
 
