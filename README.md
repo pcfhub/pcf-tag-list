@@ -6,6 +6,8 @@ as chips, with a type-ahead to attach more.
 [![Build](https://github.com/pcfhub/pcf-tag-list/actions/workflows/build.yml/badge.svg)](https://github.com/pcfhub/pcf-tag-list/actions/workflows/build.yml)
 [![Release](https://github.com/pcfhub/pcf-tag-list/actions/workflows/release.yml/badge.svg)](https://github.com/pcfhub/pcf-tag-list/actions/workflows/release.yml)
 
+[![Try it live on PCFHub](https://pcfhub.dev/badges/try-it-live.svg)](https://pcfhub.dev/components/pcf-tag-list)
+
 Documentation lives on [PCFHub](https://pcfhub.dev/components/pcf-tag-list), built
 from the `docs/` directory in this repository. Edit the Markdown here; the hub
 recompiles it.
