@@ -49,7 +49,7 @@
             "The demo's Dataverse is the preset's fixture, held in the browser: an account with a native many-to-many to a table of 24 tags, and a lookup from tag to account as well. Search, linking, unlinking and creating go through the same Web API calls and $ref requests a form sends, answered from that fixture; nothing is saved, and Reset or a reload puts it back.",
             "Browse opens the demo's own lookup dialog, a searchable list of the tag table. The platform's dialog also offers views and columns, which the demo's does not.",
             "Opening a tag reports it through the Selected tag output and navigates nowhere. On a form it opens the tag's record.",
-            "A refused request, such as a user missing the Append privilege, cannot be shown: the demo's Dataverse grants everything. The refusal line is in the screenshots."
+            "A refused link or unlink shows here, as on a form. The demo's Dataverse refuses two, the way a plugin would on a real environment: removing Key account, which the account team sets, and adding Pricing exception, which needs a manager's approval. Try either and the chips stay as they were, with the reason in the line under them. Every other tag links and unlinks. The sentences are the fixture's own; a user missing the Append privilege gets the platform's sentence instead, by the same path."
         ],
         "bundle": "out/controls/TagList/bundle.js",
         "styles": [

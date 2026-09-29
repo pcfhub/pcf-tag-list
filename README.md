@@ -61,7 +61,9 @@ The demo runs at **mocked** fidelity. `demo/tags.json` carries a small stand-in
 Dataverse beside the rows (an account, a tag table, the relationships between
 them and which tags are linked), and the hub's harness answers the control's
 metadata reads, searches, `$ref` links and lookup dialog from it. The control
-runs the same code it runs on a form; it has no demo-only property.
+runs the same code it runs on a form; it has no demo-only property. Two faults
+in the fixture refuse removing *Key account* and adding *Pricing exception*, so
+the error line under the chips shows as it does on a refused request.
 
 ## Install
 

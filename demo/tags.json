@@ -252,6 +252,20 @@
                 "referencingNavigationProperty": "cll_account"
             }
         ],
-        "subgrid": "cll_Account_cll_Tag_cll_Tag"
+        "subgrid": "cll_Account_cll_Tag_cll_Tag",
+        "faults": [
+            {
+                "operation": "disassociate",
+                "table": "cll_tag",
+                "id": "7a9d0000-0000-4000-8000-000000000007",
+                "message": "Key account is set by the account team and cannot be removed here."
+            },
+            {
+                "operation": "associate",
+                "table": "cll_tag",
+                "id": "7a9d0000-0000-4000-8000-000000000024",
+                "message": "A pricing exception needs a manager's approval before it can be tagged."
+            }
+        ]
     }
 }

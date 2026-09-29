@@ -156,6 +156,23 @@ state. Checked in the hub's own harness from its Vite dev server: search, a
 clicked suggestion, create, unlink, Browse with two picks, the ambiguous
 preset and Reset.
 
+**A refused request shows since 2026-09-28.** pcfhub/pcfhub#53 let a fixture
+declare faults, but a link fault matched only the record in the `$ref` URL, and
+every link here starts from the one account on the form. So it could refuse
+every tag or none. pcfhub/pcfhub#55 lets a link fault name either record, as
+a plugin on the Associate message sees both. `demo/tags.json` now refuses
+disassociating *Key account* and associating *Pricing exception*.
+
+Checked with 0.5.0's published bundle against that harness, before the push:
+
+- × on Key account left the chip, with "Key account could not be removed. Key
+  account is set by the account team and cannot be removed here." under the
+  chips;
+- picking Pricing exception from the list added nothing, with "Pricing exception
+  could not be added. A pricing exception needs a manager's approval before it
+  can be tagged.";
+- Upsell linked and EMEA unlinked as before.
+
 **The list is absolute, not fixed** (0.5.0). In the hub's demo 0.4.0's fixed
 list flipped up over the chips, because the frame is sized to its content and
 the hub's measure-height deliberately skips fixed subtrees, so the frame never

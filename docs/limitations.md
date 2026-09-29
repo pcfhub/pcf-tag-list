@@ -50,5 +50,6 @@ from the search box, since the tag itself still exists.
 The demo's account and tags live in your browser, not in Dataverse. Searching,
 linking, unlinking, creating and Browse all work, through the same requests a
 form sends; nothing is saved, and Reset puts the demo back. Browse opens a
-simpler dialog than the platform's, with no views, and a refused request
-cannot be shown there because the demo grants everything.
+simpler dialog than the platform's, with no views. A refused request shows
+too: the demo refuses removing *Key account* and adding *Pricing exception*,
+as a plugin might, so you can see the line the control writes under the chips.
