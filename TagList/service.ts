@@ -193,10 +193,21 @@ export class TagService {
         });
     }
 
-    /** Attach an existing tag to this record. */
-    async attach(tag: Found): Promise<void> {
+    /*
+     * **No write here ends with `dataset.refresh()`, since 0.5.1.** Each did
+     * through 0.5.0, and a refresh starts the view again at its first page —
+     * so every tag **Load more** had brought in vanished on each add or
+     * removal, and an attached tag past page one was not shown at all
+     * (`pcf-kanban-board` found the refresh's reset on a form, 2026-09-29).
+     * Each write resolves what it changed instead, and the component shows
+     * it until a fetch agrees.
+     */
+
+    /** Attach an existing tag to this record. Resolves the tag, to show. */
+    async attach(tag: Found): Promise<Found> {
         await this.guarded(() => this.link(tag.id));
-        this.read().dataset.refresh();
+
+        return { id: bareId(tag.id), name: tag.name };
     }
 
     /**
@@ -204,7 +215,7 @@ export class TagService {
      * a failure between them leaves a tag that exists and is not linked — the
      * message says which half failed, and the tag is there to attach next time.
      */
-    async create(name: string): Promise<void> {
+    async create(name: string): Promise<Found> {
         const { platform, dataset } = this.read();
         const { binding, target, parentSet } = await this.resolve();
         const table = dataset.getTargetEntityType();
@@ -224,28 +235,27 @@ export class TagService {
         const webAPI = platform.webAPI;
         const created = await this.guarded(() => webAPI.createRecord(table, data));
 
-        try {
-            if (binding.kind === 'manyToMany') {
-                await this.guarded(() => this.link(bareId(created.id)));
-            }
-        } finally {
-            dataset.refresh();
+        if (binding.kind === 'manyToMany') {
+            await this.guarded(() => this.link(bareId(created.id)));
         }
+
+        return { id: bareId(created.id), name };
     }
 
     /**
      * The platform's own lookup dialog, multi-select, opened on whatever the user
      * had already typed (`searchText`) so Browse continues the search rather
-     * than starting over. Resolves how many tags were attached — `0` for a
-     * cancel, which is a resolve with `[]`.
+     * than starting over. Resolves the tags it attached — none for a cancel,
+     * which is a resolve with `[]`. A failure part-way rejects with the ones
+     * attached before it on the error's `attached`, so they are still shown.
      */
-    async browse(searchText = ''): Promise<number> {
+    async browse(searchText = ''): Promise<Found[]> {
         const { platform, dataset } = this.read();
         const { binding } = await this.resolve();
         const table = dataset.getTargetEntityType();
 
         if (platform.pick === null || (binding.kind !== 'manyToMany' && binding.kind !== 'oneToMany')) {
-            return 0;
+            return [];
         }
 
         const picked = await this.guarded(() =>
@@ -267,22 +277,23 @@ export class TagService {
             }),
         );
 
-        const attached = new Set(dataset.sortedRecordIds.map(bareId));
-        const fresh = picked.filter((tag) => !attached.has(tag.id));
+        const loaded = new Set(dataset.sortedRecordIds.map(bareId));
+        const fresh = picked.filter((tag) => !loaded.has(tag.id));
+        const attached: Found[] = [];
 
-        try {
-            // One at a time: a failure names the tag it failed on, and the ones
-            // before it stay attached, which the refresh then shows.
-            for (const tag of fresh) {
+        // One at a time: a failure names the tag it failed on, and the ones
+        // before it stay attached — and are handed back on the error, to show.
+        for (const tag of fresh) {
+            try {
                 await this.guarded(() => this.link(tag.id), tag.name);
+            } catch (error) {
+                throw Object.assign(error instanceof Error ? error : new Error(String(error)), { attached });
             }
-        } finally {
-            if (fresh.length > 0) {
-                dataset.refresh();
-            }
+
+            attached.push({ id: bareId(tag.id), name: tag.name });
         }
 
-        return fresh.length;
+        return attached;
     }
 
     /**
@@ -314,8 +325,6 @@ export class TagService {
         } else {
             throw new Error(`${label} cannot be removed here.`);
         }
-
-        dataset.refresh();
 
         return true;
     }

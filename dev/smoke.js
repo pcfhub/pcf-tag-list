@@ -387,6 +387,68 @@ if (typeof registration.ctor !== 'function') {
     check('a dark host theme adds the dark class', darkHtml.includes('class="TagList TagList--dark'));
     check('and a host that publishes no theme gets the light fallbacks, not a guess', !noThemeHtml.includes('TagList--dark'));
 
+    /* ------------------------------------ Load more survives a write */
+
+    /*
+     * pcf-kanban-board found it on a form (2026-09-29): a refresh starts the
+     * view again at its first page, so a control that loads more and then
+     * refreshes after a write drops every page but the first. The rig resets
+     * on a refresh the same way now.
+     */
+    const paged = async () => {
+        const view = bind({ ...N2N_SUBGRID, pageSize: 2, inputs: { relationshipName: fixture.N2N } });
+
+        await ready(view);
+        view.dataset().paging.loadNextPage();
+        view.settle();
+        view.dataset().paging.loadNextPage();
+        view.settle();
+
+        return view;
+    };
+
+    const removingPaged = await paged();
+    const loadedBeforeRemove = removingPaged.ids();
+    const lastChip = loadedBeforeRemove[loadedBeforeRemove.length - 1];
+
+    const removeMark = removingPaged.calls().length;
+    const removedPaged = await removingPaged.service().remove(lastChip, 'last', { title: 't', text: 't' });
+
+    removingPaged.settle();
+
+    /*
+     * Since 0.5.1 no write ends with a refresh: the rows stay as loaded and
+     * the list hides the removed chip itself, until a fetch agrees. What a
+     * static render cannot show — the chip gone — is in SPEC.md's walkthrough.
+     */
+    check(
+        'removing a tag Load more brought in keeps every loaded row, with no refresh',
+        loadedBeforeRemove.length > 2 && removedPaged === true && removingPaged.ids().length === loadedBeforeRemove.length
+            && !removingPaged.callsSince(removeMark).includes('refresh'),
+        `${loadedBeforeRemove.length} loaded, then ${removingPaged.ids().length}; ${removingPaged.callsSince(removeMark).join(' ')}`,
+    );
+
+    const attachingPaged = await paged();
+    const loadedBeforeAttach = attachingPaged.ids();
+    const unlinked = (fixture.records || []).map((row) => row.id).find((id) => !loadedBeforeAttach.includes(id) && !linked(attachingPaged.handle, fixture.PARENT, id));
+
+    const attachMark = attachingPaged.calls().length;
+    const attachedTag = await attachingPaged.service().attach({ id: unlinked, name: 'unlinked' });
+
+    attachingPaged.settle();
+
+    check(
+        'attaching a tag keeps every loaded row, with no refresh',
+        loadedBeforeAttach.length > 2 && attachingPaged.ids().length === loadedBeforeAttach.length
+            && !attachingPaged.callsSince(attachMark).includes('refresh') && linked(attachingPaged.handle, fixture.PARENT, unlinked),
+        `${loadedBeforeAttach.length} loaded, then ${attachingPaged.ids().length}; ${attachingPaged.callsSince(attachMark).join(' ')}`,
+    );
+    check(
+        'and resolves the tag, for the list to show until a fetch holds it',
+        attachedTag && attachedTag.id === unlinked && attachedTag.name === 'unlinked',
+        JSON.stringify(attachedTag),
+    );
+
     /* ----------------------------------------------------- many-to-many */
 
     /*
@@ -414,7 +476,8 @@ if (typeof registration.ctor !== 'function') {
         removed === true && !linked(removing.handle, fixture.PARENT, victim) && removing.handle.stored(victim, 'cll_tagname') === 'Bug',
         `stored: ${removing.handle.stored(victim, 'cll_tagname')}`,
     );
-    check('and the view refreshes to show it', removeCalls.includes('refresh') && !removing.ids().includes(victim));
+    // No refresh since 0.5.1: the list hides the chip itself; the rows change at the next fetch.
+    check('and no refresh — the list hides the chip itself', !removeCalls.includes('refresh'), removeCalls.join(' '));
 
     const searching = bind({ ...N2N_SUBGRID, inputs: { relationshipName: fixture.N2N } });
 
@@ -474,7 +537,7 @@ if (typeof registration.ctor !== 'function') {
 
     const beforeCreate = searching.calls().length;
 
-    await searching.service().create('Renewal risk');
+    const createdTag = await searching.service().create('Renewal risk');
 
     const createCalls = searching.callsSince(beforeCreate);
     const createRecord = createCalls.find((call) => call.startsWith('webAPI.createRecord')) || '';
@@ -482,7 +545,11 @@ if (typeof registration.ctor !== 'function') {
 
     check('creating writes the name to the primary name column from metadata', createRecord.includes('"cll_tagname":"Renewal risk"'), createRecord);
     check('with no lookup bind under a many-to-many', !createRecord.includes('@odata.bind'), createRecord);
-    check('and refreshes, so the new chip arrives with the next fetch', createCalls.lastIndexOf('refresh') > createCalls.findIndex((call) => call.startsWith('webAPI.createRecord')), createCalls.join(' '));
+    check(
+        'and resolves the new tag rather than refreshing, so the list shows it at once',
+        !createCalls.includes('refresh') && createdTag && createdTag.name === 'Renewal risk' && typeof createdTag.id === 'string' && createdTag.id !== '',
+        `${JSON.stringify(createdTag)} ${createCalls.join(' ')}`,
+    );
     check(
         'then links the new tag',
         createdRow && linked(searching.handle, fixture.PARENT, String(createdRow.id).toLowerCase()),
@@ -497,7 +564,7 @@ if (typeof registration.ctor !== 'function') {
     const pickCall = picking.calls().find((call) => call.startsWith('utils.lookupObjects')) || '';
 
     check('Browse opens the platform lookup, multi-select, on the tag table', pickCall.includes('"allowMultiSelect":true') && pickCall.includes('cll_tag'), pickCall);
-    check('and links what was picked, braced and upper-cased as the platform hands it', picked === 1 && linked(picking.handle, fixture.PARENT, fixture.guid(15)));
+    check('and links what was picked, braced and upper-cased as the platform hands it', Array.isArray(picked) && picked.length === 1 && picked[0].id === fixture.guid(15) && linked(picking.handle, fixture.PARENT, fixture.guid(15)));
     check('with no typed term, the dialog opens on no search term at all', !pickCall.includes('searchText'), pickCall);
 
     /*
@@ -520,7 +587,7 @@ if (typeof registration.ctor !== 'function') {
 
     const cancelMark = cancelling.calls().length;
 
-    check('a cancelled Browse is a resolve with nothing, and asks nothing more', (await cancelling.service().browse()) === 0 && !cancelling.callsSince(cancelMark).some((call) => call.includes('$ref')));
+    check('a cancelled Browse is a resolve with nothing, and asks nothing more', (await cancelling.service().browse()).length === 0 && !cancelling.callsSince(cancelMark).some((call) => call.includes('$ref')));
 
     /* ------------------------------------------------------- one-to-many */
 

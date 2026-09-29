@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Binding, canAttach, canChange } from '../binding';
-import { Found } from '../platform';
+import { bareId, Found } from '../platform';
 import { Resolved, TagService } from '../service';
 import { copyTheme, liftToBody, Placement, placeFloating } from './placement';
 
@@ -98,6 +98,17 @@ export function TagListControl(props: IProps): React.ReactElement {
     const [busy, setBusy] = React.useState<string[]>([]);
     const [error, setError] = React.useState<string | null>(null);
     const [expanded, setExpanded] = React.useState(false);
+    const [added, setAdded] = React.useState<Chip[]>([]);
+    const [removed, setRemoved] = React.useState<string[]>([]);
+
+    /** Show tags this list just attached, newest first, until the rows hold them. */
+    const show = (tags: Found[]): void => {
+        setAdded((current) => [
+            ...tags.map((tag) => ({ id: bareId(tag.id), label: tag.name, color: null })),
+            ...current.filter((chip) => !tags.some((tag) => bareId(tag.id) === chip.id)),
+        ]);
+        setRemoved((current) => current.filter((id) => !tags.some((tag) => bareId(tag.id) === id)));
+    };
 
     const idBase = React.useRef(`TagList-${(instances += 1)}`).current;
     const mounted = React.useRef(true);
@@ -277,12 +288,44 @@ export function TagListControl(props: IProps): React.ReactElement {
     }
 
     const binding = resolved?.binding ?? null;
-    const chips = resolveChips(dataset);
+    /*
+     * What this list has changed and the dataset has not read back yet — the
+     * list shows it from here since 0.5.1, because no write ends with a
+     * refresh any more (a refresh drops every page but the first). An entry
+     * retires once a fetch agrees: an added tag when the rows hold it, a
+     * removed one when they no longer do. Added tags go first, so the one just
+     * attached is visible whatever the collapsed list shows.
+     */
+    const loadedIds = dataset.sortedRecordIds.map(bareId);
+    const loadedKey = loadedIds.join('|');
+
+    React.useEffect(() => {
+        const present = new Set(loadedIds);
+
+        setAdded((current) => {
+            const next = current.filter((chip) => !present.has(chip.id));
+
+            return next.length === current.length ? current : next;
+        });
+        setRemoved((current) => {
+            const next = current.filter((id) => present.has(id));
+
+            return next.length === current.length ? current : next;
+        });
+    }, [loadedKey]);
+
+    const hiding = new Set(removed);
+    const fromRows = resolveChips(dataset).filter((chip) => !hiding.has(bareId(chip.id)));
+    const shownIds = new Set(fromRows.map((chip) => bareId(chip.id)));
+    const pendingAdded = added.filter((chip) => !shownIds.has(chip.id));
+    const chips = [...pendingAdded, ...fromRows];
     const labels = new Set(chips.map((chip) => chip.label.toLowerCase()));
     const removable = !disabled && binding !== null && canChange(binding);
     const attachable = allowCreate && !disabled && binding !== null && canAttach(binding);
 
-    const total = dataset.paging.totalResultCount;
+    const reported = dataset.paging.totalResultCount;
+    // The platform's count is from the last fetch; this list's own writes since then move it.
+    const total = reported >= 0 ? reported + pendingAdded.length - removed.length : reported;
     const visible = expanded ? chips : chips.slice(0, Math.max(0, maxVisible));
     const hiddenLoaded = chips.length - visible.length;
     const unloaded = total > chips.length ? total - chips.length : 0;
@@ -322,6 +365,7 @@ export function TagListControl(props: IProps): React.ReactElement {
         setAdding(true);
 
         (option.kind === 'tag' ? service.attach(option.tag) : service.create(option.name))
+            .then((tag) => mounted.current && show([tag]))
             .catch(report('TagList_ErrorAdd', name))
             .then(() => mounted.current && setAdding(false));
     };
@@ -351,12 +395,20 @@ export function TagListControl(props: IProps): React.ReactElement {
                 (attached) => {
                     // Picked something: the box has done its job, as a pick from the list does.
                     // Cancelled: keep the text, the user may go on typing.
-                    if (attached > 0 && mounted.current) {
+                    if (attached.length > 0 && mounted.current) {
+                        show(attached);
                         setText('');
                         setResults([]);
                     }
                 },
-                report('TagList_ErrorAdd', getString('TagList_Browse')),
+                (reason: Error & { attached?: Found[] }) => {
+                    // The ones linked before the failure are attached; show them.
+                    if (reason.attached && reason.attached.length > 0 && mounted.current) {
+                        show(reason.attached);
+                    }
+
+                    report('TagList_ErrorAdd', getString('TagList_Browse'))(reason);
+                },
             )
             .then(() => mounted.current && setAdding(false));
     };
@@ -372,6 +424,11 @@ export function TagListControl(props: IProps): React.ReactElement {
             .remove(chip.id, chip.label, {
                 title: getString('TagList_ConfirmTitle'),
                 text: getString('TagList_ConfirmText').replace('{0}', chip.label),
+            })
+            .then((done) => {
+                if (done && mounted.current) {
+                    setRemoved((ids) => [...ids, bareId(chip.id)]);
+                }
             })
             .catch(report('TagList_ErrorRemove', chip.label))
             .then(() => mounted.current && setBusy((ids) => ids.filter((id) => id !== chip.id)));
