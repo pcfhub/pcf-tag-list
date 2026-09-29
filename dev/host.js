@@ -327,6 +327,16 @@
         openFile: true,
 
         /**
+         * Whether `context.navigation.openForm` exists at all. `false` is a
+         * host that leaves the method out — PCFHub's demo harness — which is
+         * not canvas: canvas publishes it and throws from the call. A control
+         * that guards on `typeof openForm` is right on this host and wrong on
+         * canvas, so a suite wants both (`pcf-calendar-view` carried this
+         * switch before the template did).
+         */
+        openForm: true,
+
+        /**
          * Whether `context.navigation` exists at all.
          *
          * Typed non-optional, which is a claim about the type definitions
@@ -349,8 +359,10 @@
          * savedEntityReference: null }`**, not `[]` and not a rejection. The
          * dismissal is the default here because it is the branch a control
          * forgets, and `null` rather than `[]` because a reader written as
-         * `saved[0]` throws on it. An ordinary (non-quick-create) form
-         * resolves with an empty array.
+         * `saved[0]` throws on it. **An ordinary form resolves on
+         * navigation, not on close** — 309 ms after the call, measured
+         * 2026-09-25 (pcf-row-commands P7) — with `savedEntityReference`
+         * holding the record it opened. This note used to say an empty array.
          */
         openFormReturns: { savedEntityReference: null },
 
@@ -389,6 +401,23 @@
          * controls.
          */
         webApiFails: false,
+
+        /**
+         * What a refused write rejects with — `record.save()` under
+         * `quirks.saveRejects`, and `createRecord`, `updateRecord` and
+         * `deleteRecord` under `webApiFails` — or `null` for each route's
+         * measured default.
+         *
+         * A control that prints the reason has to survive whatever the
+         * server's sentence is, and a plugin's or a business rule's is
+         * anything at all: `{ message: 'Only a team lead can resolve a work
+         * item.' }`, or not an object at all — `'a bare string'` is how a
+         * control printing `[object Object]` is caught. One switch for both
+         * routes, because a control's rollback must not care which one
+         * refused (`pcf-kanban-board`, which carried this before the
+         * template did).
+         */
+        rejection: null,
 
         /**
          * A `FilterExpression` the **host** holds on the view, which the
@@ -464,9 +493,75 @@
          * Whether `context.page` exists. Its `getClientUrl()` is how a control
          * finds the organisation for a same-origin metadata `fetch` — the only
          * way to reach `EntityDefinitions`, which `context.webAPI` cannot
-         * address. Not in the typings; absent on canvas and here under `false`.
+         * address. Not in the typings; absent here under `false`, which is
+         * the hub's demo harness.
+         *
+         * **On canvas it is present and `getClientUrl` throws.** Measured with
+         * a host probe on a real canvas app, 2026-09-22 (pcf-row-commands):
+         * the surface is published, and calling it throws `Method not
+         * implemented.` This rig used to leave `page` out on canvas, which
+         * passed a control that tested `typeof page.getClientUrl` and failed
+         * the same control on a real canvas app — the call is the only honest
+         * test, and a thrown refusal is an answer once it is caught.
          */
         page: true,
+
+        /**
+         * What `utils.hasEntityPrivilege(table, privilegeType, depth)`
+         * answers. `privilegeType` is the platform's `PrivilegeType`: Create
+         * 1, Read 2, **Write 3**, **Delete 4**, Assign 5, Share 6, Append 7,
+         * AppendTo 8 — Write measured as 3 on a form (pcf-audit-history R7,
+         * 2026-09-18; the reference page is easy to read one off). `depth`
+         * is Basic 0, Local 1, Deep 2, Global 3.
+         *
+         *   true / false -> every question answers that
+         *   function     -> `fn(privilegeType, depth, table)` answers
+         *   'throws'     -> the call throws, a host that cannot say
+         *
+         * **Synchronous, and a boolean** — the one member of `utils` that is
+         * not a promise. `false` is an ordinary answer about the user's
+         * roles, not a failure, and it is a different state from `utils`
+         * being absent: "the user may not" hides an affordance, "the host
+         * cannot say" leaves it to the server's own refusal. A system
+         * administrator answers `true` to everything, so the `false` branch
+         * is the one only a differently-privileged user reaches — the branch
+         * nobody tests unless a rig can produce it. Same name as the field
+         * rig's switch.
+         */
+        hasPrivilege: true,
+
+        /**
+         * Whether the manifest declares `<uses-feature name="Utility">`.
+         *
+         * **`hasEntityPrivilege` is published either way and throws when it
+         * is not declared** — measured on a model-driven main grid
+         * 2026-09-25 (pcf-row-commands P1): `typeof` answers `"function"`,
+         * and every call throws *Feature 'Utility.hasEntityPrivilege' is required to be specified in the <uses-feature> section in ControlManifest.xml before use.*
+         * So presence is not permission, and the rig cannot read the
+         * manifest: a suite passes what the manifest says.
+         */
+        utilityDeclared: true,
+
+        /**
+         * What `localStorage` is while this host's context is the latest one
+         * handed out.
+         *
+         *   'working' -> a store that holds strings; in a browser page with a
+         *                real `localStorage`, the real one
+         *   'throws'  -> **reading `localStorage` itself throws** a
+         *                `SecurityError`, which is what blocked site data and
+         *                some private windows do — the access, not a method
+         *   'full'    -> reads work and `setItem` throws `QuotaExceededError`
+         *   'absent'  -> `undefined`
+         *
+         * A control that persists a preference has to render correctly under
+         * every one of these, and the first is the only one its author sees.
+         * `storageData` is the backing object: pass the same one to two hosts
+         * to model a reload on the same browser, and read it back through
+         * `handle.storageData()` to assert what was written.
+         */
+        storage: 'working',
+        storageData: null,
 
         /**
          * Whether `utils.lookupObjects` exists while `utils` itself does. A
@@ -514,8 +609,26 @@
              * because that is what a real form does.
              */
             accumulatePages: true,
+            /**
+             * `refresh()` keeps the pages loaded so far. **Off**, because a
+             * real form does not: a refresh after Load more brought back the
+             * first page alone (`pcf-kanban-board`, 2026-09-29).
+             */
+            refreshKeepsPages: false,
             /** `hasPreviousPage` never becomes true. Observed on a real form. */
             previousPageStuck: true,
+            /**
+             * A fetch clears the platform's selection, so
+             * `getSelectedRecordIds()` answers `[]` after it.
+             *
+             * **Off, because the platform kept it**: measured on a subgrid
+             * 2026-09-25 (pcf-row-commands P3), a ribbon Assign on three
+             * selected rows refreshed the subgrid and the next `updateView`
+             * still answered all three. `pcf-data-table`'s SPEC had said the
+             * opposite with no measurement behind it. A page turn with a
+             * selection is still unmeasured, and this is the switch for it.
+             */
+            selectionDropsOnFetch: false,
             /** `totalResultCount` is -1 — common on large views. */
             uncounted: false,
             /**
@@ -661,6 +774,46 @@
      * assertion that two fetches had been made found none.
      */
     var hostsByUrl = {};
+
+    /**
+     * What `localStorage` answers, decided by the host whose context was
+     * handed out **last**.
+     *
+     * Storage has no origin argument to route by, the way `fetch` has a URL,
+     * so the rule is the nearest honest one: a control reads storage while
+     * handling the context it was just given, or from an event on a control
+     * that host mounted, and suites drive one host at a time. A suite that
+     * interleaves two hosts' events should give them the same `storageData`.
+     */
+    var activeStorage = null;
+
+    function installStorage(scope) {
+        if (scope.__pcfHostStorage) {
+            return;
+        }
+
+        var native;
+
+        try {
+            native = scope.localStorage;
+        } catch (error) {
+            native = undefined;
+        }
+
+        try {
+            Object.defineProperty(scope, 'localStorage', {
+                configurable: true,
+                get: function () {
+                    return activeStorage ? activeStorage(native) : native;
+                },
+            });
+            scope.__pcfHostStorage = true;
+        } catch (error) {
+            // A runtime whose own `localStorage` cannot be replaced keeps it,
+            // and the `storage` switch has no effect there. Said once.
+            scope.__pcfHostStorage = 'native';
+        }
+    }
     var hostCount = 0;
 
     function clientUrlFor(index) {
@@ -944,6 +1097,42 @@
             state.calls.push(argument === undefined ? name : name + '(' + JSON.stringify(argument) + ')');
         }
 
+        /**
+         * A bag as a canvas app publishes it: **every method present, and
+         * each one throwing `Method not implemented.` from the call itself** —
+         * a synchronous throw, not a rejection.
+         *
+         * Measured on a real canvas app 2026-09-22 (`pcf-data-table` SPEC,
+         * *The canvas host, measured*): fifteen of fifteen surfaces present,
+         * and `getEntityMetadata`, `retrieveRecord`, `retrieveMultipleRecords`
+         * and `page.getClientUrl` threw when called. The writes, `openForm`,
+         * `openFile` and `lookupObjects` were not called — they would change
+         * data or take the screen — and are modelled the same way, unmeasured.
+         *
+         * This rig withheld `utils`, `webAPI` and `openForm` on canvas until
+         * 2026-09-29, which certified the rule the measurement disproved:
+         * `typeof x.method === 'function'` is no capability test on canvas.
+         * A control has to test an *answer* — see `page.getClientUrl` below.
+         */
+        function onCanvas(owner, bag) {
+            if (o.host !== 'canvas' || !bag) {
+                return bag;
+            }
+
+            var refusing = {};
+
+            Object.keys(bag).forEach(function (name) {
+                refusing[name] = typeof bag[name] !== 'function'
+                    ? bag[name]
+                    : function () {
+                        log(owner + '.' + name + ' (canvas: not implemented)');
+                        throw new Error(name + ': Method not implemented.');
+                    };
+            });
+
+            return refusing;
+        }
+
         /*
          * **The metadata read a control cannot make through `context.webAPI`.**
          * `EntityDefinitions` is reachable only by a same-origin `fetch` of the
@@ -1202,6 +1391,40 @@
                     });
                 }
 
+                /*
+                 * The primary key an aggregate counts over — not always
+                 * `<table>id` (an activity's is `activityid`), which is why a
+                 * control reads it. `fixture.primaryIds` names the odd ones;
+                 * everything else answers `<table>id`. Before 2026-09-29 this
+                 * fell through to the relationships reply, and a control's
+                 * read quietly landed on its own guess.
+                 */
+                /*
+                 * Whether the table's Status Reason transitions are applied
+                 * — `false` while they are merely defined, measured
+                 * 2026-09-29 (`pcf-kanban-board` 0.3.7): `TransitionData`
+                 * was filled in on every reason and this still answered
+                 * `false` until *Enable Status Reason Transitions* was
+                 * ticked. `fixture.enforceStateTransitions` turns it on.
+                 */
+                var enforce = address.slice(prefix.length).match(/^([a-z0-9_]+)'\)\?\$select=(?:LogicalName,)?EnforceStateTransitions$/i);
+
+                if (enforce) {
+                    return reply(200, {
+                        LogicalName: enforce[1],
+                        EnforceStateTransitions: enforce[1] === fixture.targetEntityType && fixture.enforceStateTransitions === true,
+                    });
+                }
+
+                var primary = address.slice(prefix.length).match(/^([a-z0-9_]+)'\)\?\$select=PrimaryIdAttribute$/i);
+
+                if (primary) {
+                    return reply(200, {
+                        LogicalName: primary[1],
+                        PrimaryIdAttribute: (fixture.primaryIds || {})[primary[1]] || primary[1] + 'id',
+                    });
+                }
+
                 var definition = address.slice(prefix.length).match(/^([a-z0-9_]+)'\)(\?\$select=EntitySetName)?$/i);
 
                 if (definition) {
@@ -1258,6 +1481,68 @@
                 scope.fetch = scope.__pcfHostFetch;
             }
         })();
+
+        /*
+         * This host's `localStorage`, per the `storage` switch in DEFAULTS.
+         *
+         * A store of its own unless the suite hands one in, for the same
+         * reason the rows are copied: a width one host saved must not be
+         * found by the next host a suite creates, or an assertion about the
+         * default passes or fails on the order the tests ran in.
+         */
+        var storageData = o.storageData || {};
+
+        var store = {
+            getItem: function (key) {
+                return Object.prototype.hasOwnProperty.call(storageData, key) ? storageData[key] : null;
+            },
+            setItem: function (key, value) {
+                log('localStorage.setItem', key);
+
+                if (o.storage === 'full') {
+                    var full = new Error('Setting the value of \'' + key + '\' exceeded the quota.');
+                    full.name = 'QuotaExceededError';
+                    throw full;
+                }
+
+                storageData[key] = String(value);
+            },
+            removeItem: function (key) {
+                log('localStorage.removeItem', key);
+                delete storageData[key];
+            },
+            clear: function () {
+                Object.keys(storageData).forEach(function (key) {
+                    delete storageData[key];
+                });
+            },
+            key: function (index) {
+                var keys = Object.keys(storageData);
+
+                return index < keys.length ? keys[index] : null;
+            },
+            get length() {
+                return Object.keys(storageData).length;
+            },
+        };
+
+        function storageFor(native) {
+            if (o.storage === 'absent') {
+                return undefined;
+            }
+
+            if (o.storage === 'throws') {
+                var denied = new Error('Failed to read the \'localStorage\' property from \'Window\': Access is denied for this document.');
+                denied.name = 'SecurityError';
+                throw denied;
+            }
+
+            // A browser page asking for a working store gets the real one,
+            // so the harness shows a preference surviving a reload.
+            return o.storage === 'working' && native && !o.storageData ? native : store;
+        }
+
+        installStorage(typeof globalThis !== 'undefined' ? globalThis : root);
 
         /**
          * One `ConditionExpression` against one row.
@@ -1568,7 +1853,30 @@
 
             if (entry.options && entry.shape === 'descriptor') {
                 node.attributeDescriptor.OptionSet = entry.options.map(function (option) {
-                    var described = { Label: option.label, Value: option.value, IsHidden: false };
+                    /*
+                     * The keys measured 2026-09-29 (`pcf-kanban-board` 0.3.6
+                     * probe, `cll_task`): **`TransitionData` on every
+                     * option** — `null` where no transitions are defined; a
+                     * Status Reason option carries its **`State`** (a number),
+                     * a Status option its **`DefaultStatus`** and
+                     * `InvariantName`. Neither of those two has a `Color` key.
+                     * `state` / `defaultStatus` in the fixture turn them on.
+                     */
+                    var described = {
+                        Label: option.label,
+                        Value: option.value,
+                        TransitionData: option.transitionData === undefined ? null : option.transitionData,
+                        IsHidden: false,
+                    };
+
+                    if (typeof option.state === 'number') {
+                        described.State = option.state;
+                    }
+
+                    if (typeof option.defaultStatus === 'number') {
+                        described.DefaultStatus = option.defaultStatus;
+                        described.InvariantName = option.invariantName || option.label;
+                    }
 
                     /*
                      * **`Color` is on the descriptor array only, never on the
@@ -1611,6 +1919,70 @@
             }
 
             return node;
+        }
+
+        /**
+         * Whether an update names a Status Reason outside the state the record
+         * will be in — which the server refuses rather than repairs.
+         *
+         * Measured 2026-09-29 (`pcf-kanban-board` 0.3.6 probe, T4/T5 on
+         * `cll_task`): `{ statuscode }` alone into a reason of the **other**
+         * state is refused with 2147779592 and a message naming neither — the
+         * server does **not** infer the state; `{ statecode, statuscode }`
+         * together is accepted; `{ statuscode }` within the record's own state
+         * is accepted. Decidable only where the fixture gives each reason its
+         * `state`, so a fixture without one accepts everything, as before.
+         */
+        function statusMismatch(row, data) {
+            var has = function (bag, key) {
+                return Boolean(bag) && Object.prototype.hasOwnProperty.call(bag, key);
+            };
+
+            if (!has(data, 'statuscode')) {
+                return false;
+            }
+
+            var reasons = ((fixture.metadata || {}).statuscode || {}).options || [];
+            var reason = reasons.filter(function (option) {
+                return String(option.value) === String(data.statuscode);
+            })[0];
+
+            if (!reason || typeof reason.state !== 'number') {
+                return false;
+            }
+
+            var current = has(row.committed, 'statecode') ? row.committed.statecode : row.values.statecode;
+            var state = has(data, 'statecode') ? data.statecode : current;
+
+            return state !== undefined && state !== null && Number(state) !== reason.state;
+        }
+
+        /**
+         * Whether an enforced Status Reason transition refuses this update.
+         *
+         * Measured 2026-09-29 (`pcf-kanban-board` 0.3.7, T6, *Enable Status
+         * Reason Transitions* on): **the server enforces a transition only
+         * where the state changes.** Active → Inactive, not allowed, was
+         * refused with 2147807246 and the sentence below, verbatim; Cancelled
+         * → Inactive, not allowed but within one state, was **accepted**.
+         * A reason's `transitionData` in the fixture is the list of reasons
+         * it may move to, the shape `getEntityMetadata` hands over.
+         */
+        function transitionRefused(row, data) {
+            if (fixture.enforceStateTransitions !== true || !data || !Object.prototype.hasOwnProperty.call(data, 'statuscode')) {
+                return false;
+            }
+
+            var reasons = ((fixture.metadata || {}).statuscode || {}).options || [];
+            var current = row.committed && row.committed.statuscode !== undefined ? row.committed.statuscode : row.values.statuscode;
+            var from = reasons.filter(function (option) { return String(option.value) === String(current); })[0];
+            var to = reasons.filter(function (option) { return String(option.value) === String(data.statuscode); })[0];
+
+            if (!from || !to || !Array.isArray(from.transitionData) || from.state === to.state) {
+                return false;
+            }
+
+            return from.transitionData.map(String).indexOf(String(to.value)) === -1;
         }
 
         /** The label a Choice's integer renders as, from `fixture.metadata`. */
@@ -1663,10 +2035,27 @@
                     var value = row.values[name];
                     var type = typeOf(name);
 
+                    /*
+                     * **An empty column formats as `null`, not `''`.** Measured
+                     * on a model-driven main grid 2026-09-25 (pcf-row-commands):
+                     * an account with no name handed the control `null`, and a
+                     * control testing `=== ''` drew a blank row and labelled its
+                     * button "Open null". This rig answered `''` until then —
+                     * the value the control expected and the platform never
+                     * sends — so no suite could reach the blank row. Dataverse
+                     * keeps no empty string for a text column, so a fixture's
+                     * `''` is read as empty too. Measured on a text column; a
+                     * number, choice or lookup left empty is modelled the same
+                     * way and has not been watched.
+                     */
+                    if (value === null || value === undefined || value === '') {
+                        return null;
+                    }
+
                     // The platform never shows a choice as its integer or a
                     // lookup as its object; `String({ id: … })` is
                     // `[object Object]` in a cell.
-                    if (value !== null && value !== undefined && type === 'OptionSet') {
+                    if (type === 'OptionSet') {
                         return optionLabel(name, value);
                     }
 
@@ -1727,7 +2116,11 @@
                 if (quirks.saveRejects) {
                     row.staged = {};
 
-                    return Promise.reject(new Error('The platform refused this write.'));
+                    // A plain object, like `updateRecord`'s: a refused save
+                    // is the platform's shape, never an `Error`.
+                    return Promise.reject(o.rejection !== null
+                        ? o.rejection
+                        : webApiFault(2147746581, 'Access Is Denied', 'The platform refused this write.'));
                 }
 
                 /*
@@ -1946,13 +2339,34 @@
              * The bound view's id. Typed `string`; measured `null` on the
              * dataset under a bound lookup. A control reads it to fetch the
              * view's own FetchXML from `savedquery` — see `retrieveRecord`.
+             * **`undefined` on canvas** (measured 2026-09-22), whatever
+             * `viewId` says: a canvas table has no saved view to name.
              */
             getViewId: function () {
+                if (o.host === 'canvas') {
+                    return undefined;
+                }
+
                 return o.viewId === undefined ? fixture.viewId || null : o.viewId;
             },
 
             refresh: function () {
                 log('refresh');
+
+                /*
+                 * **A refresh starts the view again at its first page.**
+                 * Observed on a form 2026-09-29 (`pcf-kanban-board` 0.4.0):
+                 * after Load more twice or three times, the refresh a move
+                 * ended with brought back the first page alone, and every card
+                 * past it vanished until Load more was pressed again. This rig
+                 * kept the loaded range across a refresh until then, which is a
+                 * host on which that bug cannot happen. `refreshKeepsPages`
+                 * restores the old behaviour, for a suite that needs it.
+                 */
+                if (!quirks.refreshKeepsPages) {
+                    state.page = 1;
+                }
+
                 fetched();
             },
 
@@ -2033,6 +2447,11 @@
             });
 
             requestedColumns = [];
+
+            if (quirks.selectionDropsOnFetch && selected.length > 0) {
+                log('selection dropped by the fetch', selected.length);
+                selected = [];
+            }
 
             // Deletes the server has taken arrive with this fetch and not
             // before it. See the note on `removedPending`.
@@ -2169,9 +2588,19 @@
          * `fixture.tables` row wrapped to look like one.
          */
         function fetchRows(entityType) {
+            /*
+             * **The server answers from what it has**, which includes a write
+             * the dataset has not re-read yet: a query sent after
+             * `updateRecord` resolves counts the record where it now is. Rows
+             * are read through their committed values for that reason — until
+             * 2026-09-29 a total asked for right after a move counted the card
+             * in the lane it had left.
+             */
             if (entityType === fixture.targetEntityType) {
                 return allRecords.filter(function (row) {
                     return removed.indexOf(row.id) === -1;
+                }).map(function (row) {
+                    return row.committed ? { id: row.id, values: Object.assign({}, row.values, row.committed) } : row;
                 });
             }
 
@@ -2341,6 +2770,7 @@
                         }
 
                         out[a.alias] = key;
+                        out[a.alias + '@OData.Community.Display.V1.AttributeName'] = a.name;
 
                         var label = a.dategrouping ? undefined : groupLabel(a.name, group.rows[0].values[a.name]);
 
@@ -2381,8 +2811,23 @@
                                 result = undefined;
                         }
 
+                        /*
+                         * **Every alias names its column and carries a
+                         * formatted value** — measured 2026-09-29
+                         * (`pcf-kanban-board` 0.3.6, A2): a Money sum
+                         * `m0: 25` beside "$25.00", a count `n: 10` beside
+                         * "10", each with `AttributeName`. The rig left
+                         * them out until then, so `describesPlan` — the one
+                         * integrity check on this route — passed vacuously
+                         * in every suite. Money is formatted in dollars
+                         * here; the server uses the record's currency.
+                         */
                         if (result !== undefined) {
                             out[a.alias] = result;
+                            out[a.alias + '@OData.Community.Display.V1.AttributeName'] = a.name;
+                            out[a.alias + '@OData.Community.Display.V1.FormattedValue'] = typeOf(a.name) === 'Currency'
+                                ? '$' + Number(result).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                                : String(result);
                         }
                     });
 
@@ -2427,34 +2872,47 @@
                 },
             };
 
-            // Model-driven only, on the same rule as `openFile` below.
-            if (o.host !== 'canvas') {
-                /**
-                 * Logged in full, **both arguments**, because the options
-                 * *are* the behaviour: whether `useQuickCreateForm` was set,
-                 * whether `createFromEntity` named the parent, whether
-                 * `entityId` was left out for a create — and what the second
-                 * argument carried. `openForm(options, parameters)` takes a
-                 * `{ [column]: string }` of field values the form opens
-                 * with, and it is how a quick create arrives with a column
-                 * already set (`pcf-kanban-board`'s "+" passes the lane).
-                 * A stub that logged the options alone would certify a
-                 * button that opens a blank form. Logged as one object so a
-                 * suite can `JSON.parse` the call. Resolves
-                 * `o.openFormReturns` — see DEFAULTS for the measured shapes.
-                 */
-                navigation.openForm = function (formOptions, parameters) {
-                    log('navigation.openForm', { options: formOptions, parameters: parameters });
+            /**
+             * Logged in full, **both arguments**, because the options *are*
+             * the behaviour: whether `useQuickCreateForm` was set, whether
+             * `createFromEntity` named the parent, whether `entityId` was left
+             * out for a create — and what the second argument carried.
+             * `openForm(options, parameters)` takes a `{ [column]: string }`
+             * of field values the form opens with, and it is how a quick
+             * create arrives with a column already set (`pcf-kanban-board`'s
+             * "+" passes the lane). A stub that logged the options alone would
+             * certify a button that opens a blank form. Logged as one object
+             * so a suite can `JSON.parse` the call. Resolves
+             * `o.openFormReturns` — see DEFAULTS for the measured shapes.
+             *
+             * Published on canvas too, where it refuses from the call — see
+             * `onCanvas`.
+             */
+            navigation.openForm = function (formOptions, parameters) {
+                if (o.host === 'canvas') {
+                    log('navigation.openForm (canvas: not implemented)');
+                    throw new Error('openForm: Method not implemented.');
+                }
 
-                    return Promise.resolve(o.openFormReturns);
-                };
+                log('navigation.openForm', { options: formOptions, parameters: parameters });
+
+                return Promise.resolve(o.openFormReturns);
+            };
+
+            // `openForm: false` — a host that leaves the method out (the hub's demo).
+            if (!o.openForm) {
+                delete navigation.openForm;
             }
 
-            // Documented model-driven apps only, and a canvas host has no
-            // switch to say otherwise — `openFile: true` under `host: 'canvas'`
-            // would be a host that does not exist.
-            if (o.openFile && o.host !== 'canvas') {
+            // Documented model-driven apps only — and published on canvas
+            // anyway, where it refuses from the call (see `onCanvas`).
+            if (o.openFile) {
                 navigation.openFile = function (file, fileOptions) {
+                    if (o.host === 'canvas') {
+                        log('navigation.openFile (canvas: not implemented)');
+                        throw new Error('openFile: Method not implemented.');
+                    }
+
                     log('navigation.openFile', {
                         fileName: (file || {}).fileName,
                         fileSize: (file || {}).fileSize,
@@ -2530,6 +2988,8 @@
         }
 
         function createContext() {
+            activeStorage = storageFor;
+
             var parameters = {};
 
             parameters[o.datasetName] = dataset;
@@ -2626,8 +3086,8 @@
                  * column the fixture says nothing about — what a real node
                  * does for a column that is not a choice or a lookup.
                  */
-                utils: o.utils && o.host !== 'canvas'
-                    ? {
+                utils: o.utils
+                    ? onCanvas('utils', {
                         getEntityMetadata: function (entityName, attributes) {
                             log('utils.getEntityMetadata', { entity: entityName, attributes: attributes });
 
@@ -2715,17 +3175,50 @@
                                     : []);
                             }
                             : undefined,
-                    }
+
+                        /**
+                         * About the user's roles, synchronously — see
+                         * `hasPrivilege` in DEFAULTS for the numbers and the
+                         * three shapes. Both arguments logged, because which
+                         * privilege a control asked about *is* the decision.
+                         */
+                        hasEntityPrivilege: function (entityTypeName, privilegeType, privilegeDepth) {
+                            log('utils.hasEntityPrivilege', {
+                                entityTypeName: entityTypeName,
+                                privilegeType: privilegeType,
+                                privilegeDepth: privilegeDepth,
+                            });
+
+                            if (!o.utilityDeclared) {
+                                throw new Error("Feature 'Utility.hasEntityPrivilege' is required to be specified in the <uses-feature> section in ControlManifest.xml before use.");
+                            }
+
+                            if (o.hasPrivilege === 'throws') {
+                                throw new Error('hasEntityPrivilege: refused by the rig.');
+                            }
+
+                            return typeof o.hasPrivilege === 'function'
+                                ? Boolean(o.hasPrivilege(privilegeType, privilegeDepth, entityTypeName))
+                                : Boolean(o.hasPrivilege);
+                        },
+                    })
                     : undefined,
 
                 /**
                  * `context.page`, which is not in the typings. Its
                  * `getClientUrl` is how a control finds the organisation for a
-                 * metadata `fetch`; absent on canvas and under `page: false`.
+                 * metadata `fetch`; absent under `page: false`, **present and
+                 * throwing on canvas** — see DEFAULTS.
                  */
-                page: o.page && o.host !== 'canvas'
+                page: o.page
                     ? {
                         getClientUrl: function () {
+                            log('page.getClientUrl');
+
+                            if (o.host === 'canvas') {
+                                throw new Error('getClientUrl: Method not implemented.');
+                            }
+
                             return CLIENT_URL;
                         },
                     }
@@ -2752,13 +3245,14 @@
                  * an `Error` would pass a control that renders the string
                  * "[object Object]" where the platform's explanation belongs.
                  */
-                // Forced absent on canvas however the switch is set, on the
-                // same rule as `utils` and `page`: WebAPI is Dataverse-dependent
-                // and is not available in canvas apps, whatever the manifest
-                // declares. A rig that could be told "canvas, with a Web API"
-                // would pass a control that works nowhere.
-                webAPI: o.webAPI && o.host !== 'canvas'
-                    ? {
+                // Published on canvas and refusing from every call, on the
+                // same rule as `utils` and `page` — see `onCanvas`. WebAPI is
+                // Dataverse-dependent and does not *work* in canvas apps,
+                // whatever the manifest declares; that is not the same as
+                // being absent there, and a control that feature-detects
+                // `updateRecord` offers a write canvas can only refuse.
+                webAPI: o.webAPI
+                    ? onCanvas('webAPI', {
                         /**
                          * **The row arrives on the next fetch, not on the
                          * call.** `createRecord` resolves with the new id and
@@ -2801,7 +3295,7 @@
                             log('webAPI.createRecord', { entity: entityType, data: logged });
 
                             if (o.webApiFails) {
-                                return Promise.reject(webApiFault(
+                                return Promise.reject(o.rejection !== null ? o.rejection : webApiFault(
                                     2147746581,
                                     '',
                                     'The record could not be created.',
@@ -2996,7 +3490,9 @@
                             log('webAPI.updateRecord', { entity: entityType, id: id, data: data });
 
                             if (o.webApiFails) {
-                                return Promise.reject(webApiFault(2147781913, '', PAYLOAD_FAULT));
+                                return Promise.reject(o.rejection !== null
+                                    ? o.rejection
+                                    : webApiFault(2147781913, '', PAYLOAD_FAULT));
                             }
 
                             var row = allRecords.filter(function (candidate) {
@@ -3008,6 +3504,22 @@
                                     2147746327,
                                     'Record Is Unavailable',
                                     'The requested record was not found.',
+                                ));
+                            }
+
+                            if (statusMismatch(row, data)) {
+                                return Promise.reject(webApiFault(
+                                    2147779592,
+                                    'State code or status code is invalid.',
+                                    'State code is invalid or state code is valid but status code is invalid for a specified state code.',
+                                ));
+                            }
+
+                            if (transitionRefused(row, data)) {
+                                return Promise.reject(webApiFault(
+                                    2147807246,
+                                    '',
+                                    'Action could not be taken for few records before of status reason transition restrictions.',
                                 ));
                             }
 
@@ -3155,7 +3667,7 @@
                             log('webAPI.deleteRecord', entityType + ' ' + id);
 
                             if (o.webApiFails) {
-                                return Promise.reject({
+                                return Promise.reject(o.rejection !== null ? o.rejection : {
                                     errorCode: 2147746581,
                                     message: 'The record could not be deleted.',
                                 });
@@ -3183,7 +3695,7 @@
                                 name: gone && primary ? formatted(gone.values[primary.name]) : '',
                             });
                         },
-                    }
+                    })
                     : undefined,
 
                 navigation: buildNavigation(),
@@ -3269,6 +3781,10 @@
             state: state,
             quirks: quirks,
             options: o,
+            /** What this host's `localStorage` holds — pass it to a second host to model a reload. */
+            storageData: function () {
+                return storageData;
+            },
             /** The server's many-to-many links as they stand, whatever the dataset has fetched. */
             links: function () {
                 return links.map(function (link) {
