@@ -4,7 +4,7 @@ A multi-select lookup for model-driven forms. 0.3.0 turned a create-only chip
 list whose remove button could delete shared records into one that attaches,
 creates and unlinks over whichever relationship the subgrid shows.
 
-## 0.5.1 — adding and removing keep what Load more brought in
+## 0.5.1 / 0.5.2 — adding and removing keep what Load more brought in
 
 `pcf-kanban-board` found it on a form (2026-09-29, its 0.4.1): a dataset
 `refresh()` starts the view again at its first page. Every write here ended
@@ -22,11 +22,14 @@ with the five kept.
 
 | | Look at | Right way | Measured |
 | --- | --- | --- | --- |
-| W1 | A record with more tags than a page: **+N more**, **Load more** until all show, remove one from the last page | That chip goes; the rest stay | |
-| W2 | Attach a tag by typing and picking it | It appears first; the rest stay | |
-| W3 | **Browse**, pick two | Both appear first; the rest stay | |
-| W4 | Create a new tag | It appears first | |
-| W5 | Reload the form | Every tag in the view's order, the added ones among them | |
+| W1 | A record with more tags than a page: **+N more**, **Load more** until all show, remove one from the last page | That chip goes; the rest stay | **Passed** 2026-09-29 (0.5.1) |
+| W2 | Attach a tag by typing and picking it | It appears first; the rest stay | **Passed** 2026-09-29 (0.5.1) |
+| W3 | **Browse**, pick two | Both appear first; the rest stay | **Passed** 2026-09-29 (0.5.1) |
+| W4 | Create a new tag | It appears first | **Passed** 2026-09-29 (0.5.1) |
+| W5 | Reload the form | Every tag in the view's order, the added ones among them || **Passed** 2026-09-29 (0.5.1) |
+| W6 | Create a tag from the list, then press its **x** | It goes, and the count with it | |
+
+**W1–W5 passed on 0.5.1 (2026-09-29); W6 found the fault 0.5.2 fixes.** Creating a tag and then removing it unlinked it and left the chip: a removal hid rows only, and a tag the list had just added is in no row — only in its "added" list. The held state is `TagList/chips.ts` since 0.5.2, pure and loaded by the suite through `dev/modules.js`, so this state is asserted rather than assumed; 0.5.1 was never tagged.
 
 Why 0.3.0 was this release: the most repeated model-driven request in the
 community is a multi-select lookup over a many-to-many (Microsoft's own needs
