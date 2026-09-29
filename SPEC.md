@@ -4,6 +4,30 @@ A multi-select lookup for model-driven forms. 0.3.0 turned a create-only chip
 list whose remove button could delete shared records into one that attaches,
 creates and unlinks over whichever relationship the subgrid shows.
 
+## 0.5.1 — adding and removing keep what Load more brought in
+
+`pcf-kanban-board` found it on a form (2026-09-29, its 0.4.1): a dataset
+`refresh()` starts the view again at its first page. Every write here ended
+with one — attach, create, Browse, remove — so after **Load more** each change
+dropped every chip past page one, and a tag just attached that sorted past it
+was not shown at all. Now no write refreshes: each resolves what it changed
+(the tag, the tags linked, `true`), and the list shows an added tag first and
+hides a removed one from its own state, each retiring when the rows agree.
+
+The rig was moved onto the template's host first (`9619109`); against its
+page-one refresh, restoring the refresh in `attach` fails "6 loaded, then 2".
+In the harness, a page-size-2 many-to-many list after Load more twice:
+removing a third-page tag left the other five; Browse put "Power Apps" first
+with the five kept.
+
+| | Look at | Right way | Measured |
+| --- | --- | --- | --- |
+| W1 | A record with more tags than a page: **+N more**, **Load more** until all show, remove one from the last page | That chip goes; the rest stay | |
+| W2 | Attach a tag by typing and picking it | It appears first; the rest stay | |
+| W3 | **Browse**, pick two | Both appear first; the rest stay | |
+| W4 | Create a new tag | It appears first | |
+| W5 | Reload the form | Every tag in the view's order, the added ones among them | |
+
 Why 0.3.0 was this release: the most repeated model-driven request in the
 community is a multi-select lookup over a many-to-many (Microsoft's own needs
 a Field Service licence; PCF Gallery lists several community ones that break in
