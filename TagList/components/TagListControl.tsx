@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Binding, canAttach, canChange } from '../binding';
 import { bareId, Found } from '../platform';
+import { adjustedTotal, afterAdd, afterRemove, NOTHING_PENDING, Pending, reconcile, visibleChips } from '../chips';
 import { Resolved, TagService } from '../service';
 import { copyTheme, liftToBody, Placement, placeFloating } from './placement';
 
@@ -98,16 +99,12 @@ export function TagListControl(props: IProps): React.ReactElement {
     const [busy, setBusy] = React.useState<string[]>([]);
     const [error, setError] = React.useState<string | null>(null);
     const [expanded, setExpanded] = React.useState(false);
-    const [added, setAdded] = React.useState<Chip[]>([]);
-    const [removed, setRemoved] = React.useState<string[]>([]);
+    /** This list's writes the rows have not read back yet — see TagList/chips.ts. */
+    const [pending, setPending] = React.useState<Pending>(NOTHING_PENDING);
 
-    /** Show tags this list just attached, newest first, until the rows hold them. */
+    /** Show tags this list just attached or created, newest first, until the rows hold them. */
     const show = (tags: Found[]): void => {
-        setAdded((current) => [
-            ...tags.map((tag) => ({ id: bareId(tag.id), label: tag.name, color: null })),
-            ...current.filter((chip) => !tags.some((tag) => bareId(tag.id) === chip.id)),
-        ]);
-        setRemoved((current) => current.filter((id) => !tags.some((tag) => bareId(tag.id) === id)));
+        setPending((current) => afterAdd(current, tags));
     };
 
     const idBase = React.useRef(`TagList-${(instances += 1)}`).current;
@@ -300,32 +297,18 @@ export function TagListControl(props: IProps): React.ReactElement {
     const loadedKey = loadedIds.join('|');
 
     React.useEffect(() => {
-        const present = new Set(loadedIds);
-
-        setAdded((current) => {
-            const next = current.filter((chip) => !present.has(chip.id));
-
-            return next.length === current.length ? current : next;
-        });
-        setRemoved((current) => {
-            const next = current.filter((id) => present.has(id));
-
-            return next.length === current.length ? current : next;
-        });
+        setPending((current) => reconcile(current, loadedIds));
     }, [loadedKey]);
 
-    const hiding = new Set(removed);
-    const fromRows = resolveChips(dataset).filter((chip) => !hiding.has(bareId(chip.id)));
-    const shownIds = new Set(fromRows.map((chip) => bareId(chip.id)));
-    const pendingAdded = added.filter((chip) => !shownIds.has(chip.id));
-    const chips = [...pendingAdded, ...fromRows];
+    const rowChips = resolveChips(dataset);
+    const chips = visibleChips(rowChips, pending);
     const labels = new Set(chips.map((chip) => chip.label.toLowerCase()));
     const removable = !disabled && binding !== null && canChange(binding);
     const attachable = allowCreate && !disabled && binding !== null && canAttach(binding);
 
     const reported = dataset.paging.totalResultCount;
     // The platform's count is from the last fetch; this list's own writes since then move it.
-    const total = reported >= 0 ? reported + pendingAdded.length - removed.length : reported;
+    const total = adjustedTotal(reported, rowChips, pending);
     const visible = expanded ? chips : chips.slice(0, Math.max(0, maxVisible));
     const hiddenLoaded = chips.length - visible.length;
     const unloaded = total > chips.length ? total - chips.length : 0;
@@ -427,7 +410,8 @@ export function TagListControl(props: IProps): React.ReactElement {
             })
             .then((done) => {
                 if (done && mounted.current) {
-                    setRemoved((ids) => [...ids, bareId(chip.id)]);
+                    // Out of both: a tag this list created is only in the "added" set.
+                    setPending((current) => afterRemove(current, chip.id, loadedIds));
                 }
             })
             .catch(report('TagList_ErrorRemove', chip.label))

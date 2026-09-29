@@ -387,6 +387,60 @@ if (typeof registration.ctor !== 'function') {
     check('a dark host theme adds the dark class', darkHtml.includes('class="TagList TagList--dark'));
     check('and a host that publishes no theme gets the light fallbacks, not a guess', !noThemeHtml.includes('TagList--dark'));
 
+    /* ------------------------------ what the list shows between fetches */
+
+    /*
+     * TagList/chips.ts, loaded from source: the list's own writes, held until
+     * a fetch reads them back. A static render cannot hold React state, which
+     * is how 0.5.1's first build shipped a tag that was created, removed
+     * through the API, and still drawn (found on the form, 2026-09-29).
+     */
+    const { createLoader } = require('./modules');
+    const chipsModule = createLoader({ root: path.join(__dirname, '..', 'TagList'), forbid: [[/react/, 'React'], [/components\//, 'the component tree']] })('chips');
+    const { NOTHING_PENDING, afterAdd, afterRemove, reconcile, visibleChips, adjustedTotal } = chipsModule;
+    const chipRow = (id, label) => ({ id, label, color: null });
+    const chipRows = [chipRow('aaaa', 'Feature'), chipRow('bbbb', 'Bug')];
+    const chipRowIds = chipRows.map((chip) => chip.id);
+
+    const created = afterAdd(NOTHING_PENDING, [{ id: '{CCCC}', name: 'Renewal risk' }]);
+
+    check(
+        'a tag just created is drawn first, before the rows hold it',
+        JSON.stringify(visibleChips(chipRows, created).map((chip) => chip.label)) === '["Renewal risk","Feature","Bug"]',
+        JSON.stringify(visibleChips(chipRows, created).map((chip) => chip.label)),
+    );
+
+    const createdThenRemoved = afterRemove(created, 'cccc', chipRowIds);
+
+    check(
+        'and removing it takes it off the list — it was never in the rows to hide',
+        JSON.stringify(visibleChips(chipRows, createdThenRemoved).map((chip) => chip.label)) === '["Feature","Bug"]'
+            && createdThenRemoved.removed.length === 0,
+        JSON.stringify(createdThenRemoved),
+    );
+    check('with the count back where it was', adjustedTotal(2, chipRows, createdThenRemoved) === 2, String(adjustedTotal(2, chipRows, createdThenRemoved)));
+
+    const removedFromRows = afterRemove(NOTHING_PENDING, '{BBBB}', chipRowIds);
+
+    check(
+        'a tag the rows hold is hidden until a fetch drops it',
+        JSON.stringify(visibleChips(chipRows, removedFromRows).map((chip) => chip.label)) === '["Feature"]' && adjustedTotal(2, chipRows, removedFromRows) === 1,
+        JSON.stringify(removedFromRows),
+    );
+    check(
+        'and forgotten once it has',
+        reconcile(removedFromRows, ['aaaa']).removed.length === 0 && reconcile(created, ['aaaa', 'bbbb', 'cccc']).added.length === 0,
+        JSON.stringify(reconcile(removedFromRows, ['aaaa'])),
+    );
+
+    const readded = afterAdd(removedFromRows, [{ id: 'bbbb', name: 'Bug' }]);
+
+    check(
+        'a tag removed and attached again is shown, once',
+        visibleChips(chipRows, readded).filter((chip) => chip.label === 'Bug').length === 1 && visibleChips(chipRows, readded).length === 2,
+        JSON.stringify(visibleChips(chipRows, readded).map((chip) => chip.label)),
+    );
+
     /* ------------------------------------ Load more survives a write */
 
     /*
