@@ -27,7 +27,7 @@ with the five kept.
 | W3 | **Browse**, pick two | Both appear first; the rest stay | **Passed** 2026-09-29 (0.5.1) |
 | W4 | Create a new tag | It appears first | **Passed** 2026-09-29 (0.5.1) |
 | W5 | Reload the form | Every tag in the view's order, the added ones among them | **Passed** 2026-09-29 (0.5.1) |
-| W6 | Create a tag from the list, then press its **x** | It goes, and the count with it | |
+| W6 | Create a tag from the list, then press its **x** | It goes, and the count with it |  **Passed** 2026-09-29 (0.5.2) |
 
 **W1–W5 passed on 0.5.1 (2026-09-29); W6 found the fault 0.5.2 fixes.** Creating a tag and then removing it unlinked it and left the chip: a removal hid rows only, and a tag the list had just added is in no row — only in its "added" list. The held state is `TagList/chips.ts` since 0.5.2, pure and loaded by the suite through `dev/modules.js`, so this state is asserted rather than assumed; 0.5.1 was never tagged.
 
