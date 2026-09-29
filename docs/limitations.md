@@ -33,6 +33,12 @@ record's links once, up to 5,000 of them. Past that, a suggestion may name a
 tag the record already has; picking it changes nothing. Chips load a page at a
 time; **+N more** and **Load more** reach the rest.
 
+Adding and removing a tag keep every chip **Load more** has brought in (from
+0.5.1; before it, each change started the list again at its first page, and a
+tag just attached could be one it no longer showed). A tag you add appears
+first until the list next reads the record's tags — on the form's next load —
+and then takes its place in the view's order.
+
 ## A junction table's view
 
 A subgrid over a junction table's own view (each row a link, the label read
