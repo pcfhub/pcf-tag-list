@@ -4,6 +4,7 @@
     "slug": "pcf-tag-list",
     "name": "Tag List",
     "tagline": "A multi-select lookup for model-driven forms: related records as chips, with a type-ahead to attach more.",
+    "summary": "Shows a many-to-many or one-to-many relationship on a model-driven form as chips instead of a subgrid, for the cases where the related records are short labels such as categories or skills.\n\n- Type to find a record and attach it; the ones already attached are left out of the suggestions\n- Optionally create one that does not exist yet, from the same box\n- **Browse** opens the platform's own lookup dialog\n- Removing a chip unlinks the record without deleting it",
     "category": "data",
     "hosts": [
         "model-driven"
