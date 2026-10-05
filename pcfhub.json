@@ -16,6 +16,8 @@
         "multi-select",
         "lookup"
     ],
+    "supportLevel": "reference",
+    "builtWith": "ai",
 
     "control": {
         "namespace": "PCFHub",

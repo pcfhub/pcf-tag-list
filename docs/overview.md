@@ -9,6 +9,10 @@ order: 1
 A multi-select lookup for model-driven forms: the records a record is related
 to, shown as chips, with a search box to attach more.
 
+:::callout{type=warning}
+**Reference example · built with AI.** This control was written with AI (Claude) and tested on a live Dataverse form; its code has not been reviewed line by line. It is published as a worked example and is not maintained — read the source and [SPEC.md](https://github.com/pcfhub/pcf-tag-list/blob/main/SPEC.md) (what was measured on the form) before you use it. Fixes are not guaranteed.
+:::
+
 ::image{src=media/chips.png alt="Tag List showing eight coloured chips and a +6 more link above a search box" zoom}
 
 ## Why this one
