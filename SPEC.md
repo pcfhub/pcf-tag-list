@@ -238,6 +238,23 @@ Reported from the form, not measured request by request:
   not a supported model-driven setting yet (Microsoft Learn, *Modern,
   refreshed look*), so this was seen through the host's dark theme flag.
 
+## 0.5.3: a list left open over the header
+
+pcf-lookup-search 0.3.0 was reported with its list riding up over the form's
+header after the form scrolled, and this list is placed the same way: in a
+layer at the end of `<body>`, re-placed against the field on every scroll.
+Measured on the test form, 2026-10-14, on 0.5.2: with `a` typed, a scroll
+that put the field at y 200 — above the form's scroller, which starts at 286 —
+left the list drawn at 233–433, over the header.
+
+0.5.3 closes the list when less than half the field is visible, through the
+shared `lib/close-when-hidden` (the template's copy). Walked on the form at
+1100×650: a 60px scroll kept the list and it followed the field (field 390,
+list 423); the scroll that put the field at 230 closed it, with `p` still in
+the box and the form left where it was scrolled. A list closed this way, or
+by Escape, keeps focus in the box, where focus alone cannot reopen it, so the
+box now opens the list on a click as well; a click on the focused box did.
+
 ## Not verified
 
 - **The junction-view signal.** `linkRows` is recognised by the label column's

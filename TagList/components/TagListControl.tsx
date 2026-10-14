@@ -4,6 +4,7 @@ import { bareId, Found } from '../platform';
 import { adjustedTotal, afterAdd, afterRemove, NOTHING_PENDING, Pending, reconcile, visibleChips } from '../chips';
 import { Resolved, TagService } from '../service';
 import { copyTheme, liftToBody, Placement, placeFloating } from './placement';
+import { useCloseWhenHidden } from '../lib/close-when-hidden/useCloseWhenHidden';
 
 export interface IProps {
     dataset: ComponentFramework.PropertyTypes.DataSet;
@@ -280,6 +281,14 @@ export function TagListControl(props: IProps): React.ReactElement {
         // The chip count moves the field: a chip added above it pushes it down.
     }, [wantsList, dataset.sortedRecordIds.length]);
 
+    /*
+     * ...and close it once the field scrolls out of the form. Following the
+     * field is what carried the list up over the form's header, which is not
+     * part of the form's scroller (lib/close-when-hidden/watch.ts). What was
+     * typed stays; a click or a keystroke in the box opens it again.
+     */
+    useCloseWhenHidden(fieldRef.current, wantsList, () => setOpen(false));
+
     if (dataset.loading && dataset.sortedRecordIds.length === 0) {
         return <div className="TagList TagList-loading">{getString('TagList_Loading')}</div>;
     }
@@ -530,6 +539,9 @@ export function TagListControl(props: IProps): React.ReactElement {
                             }}
                             onKeyDown={onKeyDown}
                             onFocus={() => setOpen(true)}
+                            // A list closed by Escape or by scrolling keeps focus here,
+                            // so focus alone cannot bring it back; a click does.
+                            onClick={() => setOpen(true)}
                             onBlur={() => setOpen(false)}
                         />
                         {props.canBrowse && (
