@@ -1,6 +1,6 @@
 {
   "name": "pcf-tag-list",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "A many-to-many tag picker rendered as removable chips, bound to a dataset.",
   "license": "MIT",
   "private": true,
@@ -17,7 +17,8 @@
     "bump": "node scripts/version.mjs",
     "release": "node scripts/release.mjs",
     "harness": "node dev/serve.js",
-    "demo-check": "node dev/demo-check.js"
+    "demo-check": "node dev/demo-check.js",
+    "focus": "node dev/focus.js"
   },
   "dependencies": {},
   "devDependencies": {

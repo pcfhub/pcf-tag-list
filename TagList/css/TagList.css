@@ -141,21 +141,24 @@
     fill: currentColor;
 }
 
-.TagList .TagList-chip-remove:hover:not(:disabled),
-.TagList .TagList-browse:hover:not(:disabled),
-.TagList .TagList-more:hover:not(:disabled),
+.TagList .TagList-chip-remove:hover:not(:disabled):not([aria-disabled="true"]),
+.TagList .TagList-browse:hover:not(:disabled):not([aria-disabled="true"]),
+.TagList .TagList-more:hover:not(:disabled):not([aria-disabled="true"]),
 .TagList .TagList-dismiss:hover {
     background-color: var(--TagList-subtle-hover);
 }
 
-.TagList .TagList-chip-remove:active:not(:disabled),
-.TagList .TagList-browse:active:not(:disabled) {
+.TagList .TagList-chip-remove:active:not(:disabled):not([aria-disabled="true"]),
+.TagList .TagList-browse:active:not(:disabled):not([aria-disabled="true"]) {
     background-color: var(--TagList-subtle-pressed);
 }
 
 .TagList .TagList-chip-remove:disabled,
 .TagList .TagList-browse:disabled,
-.TagList .TagList-more:disabled {
+.TagList .TagList-more:disabled,
+.TagList .TagList-chip-remove[aria-disabled="true"],
+.TagList .TagList-browse[aria-disabled="true"],
+.TagList .TagList-more[aria-disabled="true"] {
     cursor: default;
 }
 

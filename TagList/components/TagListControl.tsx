@@ -122,6 +122,34 @@ export function TagListControl(props: IProps): React.ReactElement {
     });
     const [placement, setPlacement] = React.useState<Placement>({ kind: 'pending' });
     const wantsList = open && text.trim() !== '';
+    /** Each chip's remove button, so focus can move to a neighbour when one leaves. */
+    const removeButtons = React.useRef(new Map<string, HTMLButtonElement>());
+    const inputRef = React.useRef<HTMLInputElement>(null);
+    /** Set when a removed chip's button had focus: the chip id to move to, or the add box. */
+    const focusAfterRemove = React.useRef<string | null>(null);
+
+    /*
+     * A chip that leaves takes its remove button — and the keyboard user's
+     * focus — with it, and the browser puts focus on the page body. Once the
+     * chip is gone, hand focus to the neighbour picked when it was pressed.
+     * Only when focus really was lost: a user who has clicked elsewhere in the
+     * meantime keeps their place.
+     */
+    React.useEffect(() => {
+        const target = focusAfterRemove.current;
+
+        if (target === null) {
+            return;
+        }
+
+        focusAfterRemove.current = null;
+
+        const lost = document.activeElement === null || document.activeElement === document.body;
+
+        if (lost) {
+            (target === 'input' ? inputRef.current : removeButtons.current.get(target))?.focus();
+        }
+    });
 
     React.useEffect(
         () => () => {
@@ -410,6 +438,15 @@ export function TagListControl(props: IProps): React.ReactElement {
             return;
         }
 
+        /*
+         * Where focus goes if this chip leaves: the next chip's remove, else
+         * the previous one's, else the add box. Picked now, from the chips on
+         * screen, because once the chip is gone its neighbours are all that
+         * is left to say where it was.
+         */
+        const at = visible.findIndex((c) => c.id === chip.id);
+        const neighbour = visible[at + 1] ?? visible[at - 1] ?? null;
+
         setError(null);
         setBusy((ids) => [...ids, chip.id]);
         service
@@ -419,6 +456,10 @@ export function TagListControl(props: IProps): React.ReactElement {
             })
             .then((done) => {
                 if (done && mounted.current) {
+                    // Before the state change: React 16 renders a set-state in a
+                    // promise callback at once, and the effect that reads this
+                    // runs after that render.
+                    focusAfterRemove.current = neighbour === null ? 'input' : neighbour.id;
                     // Out of both: a tag this list created is only in the "added" set.
                     setPending((current) => afterRemove(current, chip.id, loadedIds));
                 }
@@ -472,11 +513,22 @@ export function TagListControl(props: IProps): React.ReactElement {
                             {chip.label}
                         </button>
                         {removable && (
+                            // aria-disabled, never `disabled`, while the chip is being
+                            // removed: a focused button that becomes disabled is blurred,
+                            // and the keyboard user lands on the page body. `remove`
+                            // refuses a second press by state.
                             <button
                                 type="button"
                                 className="TagList-chip-remove"
+                                ref={(node) => {
+                                    if (node) {
+                                        removeButtons.current.set(chip.id, node);
+                                    } else {
+                                        removeButtons.current.delete(chip.id);
+                                    }
+                                }}
                                 aria-label={getString('TagList_RemoveLabel').replace('{0}', chip.label)}
-                                disabled={busy.includes(chip.id)}
+                                aria-disabled={busy.includes(chip.id) || undefined}
                                 onClick={() => remove(chip)}
                             >
                                 <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false">
@@ -500,10 +552,16 @@ export function TagListControl(props: IProps): React.ReactElement {
                         <button
                             type="button"
                             className="TagList-more"
-                            disabled={dataset.loading}
+                            // aria-disabled, not `disabled`, so the button keeps focus
+                            // while its page loads; the press is refused below.
+                            aria-disabled={dataset.loading || undefined}
                             // Bare loadNextPage() accumulates: sortedRecordIds comes back
                             // holding every page so far (pcf-compact-list).
-                            onClick={() => dataset.paging.loadNextPage()}
+                            onClick={() => {
+                                if (!dataset.loading) {
+                                    dataset.paging.loadNextPage();
+                                }
+                            }}
                         >
                             {getString('TagList_LoadMore')}
                         </button>
@@ -532,7 +590,13 @@ export function TagListControl(props: IProps): React.ReactElement {
                             aria-label={getString('TagList_AddPlaceholder')}
                             placeholder={getString('TagList_AddPlaceholder')}
                             value={text}
-                            disabled={adding}
+                            // Read-only while a tag attaches, not `disabled`: Enter here
+                            // starts the attach, and a disabled box is blurred — the user
+                            // would lose their place before typing the next tag.
+                            // `choose` and `browse` refuse while `adding`.
+                            ref={inputRef}
+                            readOnly={adding}
+                            aria-busy={adding || undefined}
                             onChange={(event) => {
                                 setText(event.target.value);
                                 setOpen(true);
@@ -550,7 +614,7 @@ export function TagListControl(props: IProps): React.ReactElement {
                                 className="TagList-browse"
                                 aria-label={getString('TagList_BrowseLabel')}
                                 title={getString('TagList_BrowseLabel')}
-                                disabled={adding}
+                                aria-disabled={adding || undefined}
                                 onClick={browse}
                             >
                                 <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">

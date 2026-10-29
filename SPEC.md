@@ -255,8 +255,36 @@ the box and the form left where it was scrolled. A list closed this way, or
 by Escape, keeps focus in the box, where focus alone cannot reopen it, so the
 box now opens the list on a click as well; a click on the focused box did.
 
+## 0.5.4: focus survives a remove, an add and Load more
+
+Three presses left a keyboard user on the page body:
+- **A chip's remove** set `disabled` while the unlink ran. When the unlink finished, the chip left and took its button with it.
+- **The add box** set `disabled` while a tag attached, so Enter on an option blurred it.
+- ***Load more*** set `disabled` while its page loaded.
+
+Chrome blurs a focused element that becomes disabled at the next rendering
+update, and re-enabling it gives nothing back. Measured in Chrome 152 on
+2026-10-29: still focused straight after `disabled = true`, gone two frames
+later. The workspace's `check-template` warning on `disabled={busy}` found
+these, not a report.
+
+The fix:
+- **The remove button and *Load more*** use `aria-disabled`, and the press is refused by state.
+- **The add box** is `readOnly` and `aria-busy` while it attaches. `choose` and `browse` already refused while `adding`.
+- **A removed chip** hands focus to the next chip's remove, else the previous one's, else the add box. This happens only when focus really was lost, so a user who clicked elsewhere keeps their place.
+
+**`npm run focus`** presses Enter in headless Chrome on the harness and reads
+`document.activeElement` (`dev/focus.js`).
+- **Its harness writes are slowed to 400 ms.** The harness answers within a frame, which hides the blur entirely.
+- **Before the fix**, against the 0.5.3 build: the remove left focus on `body`, and so did the add box. *Load more* kept it, because the harness pages synchronously and never reaches the slow path.
+- **After the fix:** focus on the next chip's remove ("Remove Bug"), on the add box, and on *Load more*.
+
 ## Not verified
 
+- **The form's own dialog.** A remove confirms through
+  `openConfirmDialog`, which on a form moves focus into the dialog and back.
+  The harness's dialog resolves without moving focus at all, so the hand-back
+  is the walkthrough's to see.
 - **The junction-view signal.** `linkRows` is recognised by the label column's
   name containing `.` (a linked table's column). Unmeasured; no junction subgrid
   was probed.
