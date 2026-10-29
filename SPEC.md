@@ -279,6 +279,15 @@ The fix:
 - **Before the fix**, against the 0.5.3 build: the remove left focus on `body`, and so did the add box. *Load more* kept it, because the harness pages synchronously and never reaches the slow path.
 - **After the fix:** focus on the next chip's remove ("Remove Bug"), on the add box, and on *Load more*.
 
+**On the form, 2026-10-29** (0.5.4 imported, the subgrid list on the
+account's General tab). **Remove Black** was focused and pressed with a real
+Enter. This list removes without a confirmation, and focus landed on
+**Remove Blue**. Then *Black* was typed into the add box and Enter pressed.
+For this binding a removed tag's row is deleted, so the list offered
+*Create "Black"*, and the tag came back as a new row. The box was read-only
+for the first half-second and focused throughout. The list reads as it did
+before the check.
+
 ## Not verified
 
 - **The form's own dialog.** A remove confirms through
